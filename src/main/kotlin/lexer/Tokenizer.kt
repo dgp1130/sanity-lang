@@ -1,7 +1,5 @@
 package com.sanity.compiler.lexer
 
-import kotlin.coroutines.experimental.SequenceBuilder
-
 data class Token(val content: String)
 
 /**
@@ -15,7 +13,7 @@ class Tokenizer(private var generator: Sequence<Char>) {
     private var result: String? = null
 
     private fun contentToParse(): Boolean {
-        result == null && generator.count() >= 1
+        return result == null && generator.count() >= 1
     }
 
     /**
@@ -94,7 +92,7 @@ class Tokenizer(private var generator: Sequence<Char>) {
      * requested and block all further processing until it is extracted.
      */
     fun done(): Tokenizer {
-        if (result == null) {
+        if (result == null && buffer != "") {
             result = buffer
             buffer = ""
         }
@@ -106,10 +104,13 @@ class Tokenizer(private var generator: Sequence<Char>) {
      * Return the token parsed and reset the Tokenizer for the next iteration.
      */
     fun tokenize(): Token? {
-        if (generator.count() == 0) return null
-
-        val token = Token(result!!)
-        result = null
-        return token
+        if (result != null) {
+            val token = Token(result!!)
+            result = null
+            return token
+        } else {
+            if (generator.count() == 0) return null
+            else throw AssertionError("Attempted to tokenize with nothing in the buffer.")
+        }
     }
 }
