@@ -51,7 +51,7 @@ run {
     if (project.hasProperty("appArgs")) {
         args = Eval.me(appArgs)
     } else {
-        args = ["src/main/resources/hello-world.dgp", "build/resources/main/hello-world.out"]
+        args = ["src/main/resources/hello-world.sane", "build/resources/main/hello-world.out"]
     }
 }
 
