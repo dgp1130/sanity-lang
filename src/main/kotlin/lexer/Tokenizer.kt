@@ -81,7 +81,7 @@ class Tokenizer(private var generator: Sequence<Char>) {
     }
 
     /**
-     * Skip the current character by NOT adding including it in the next token and move on to the next character.
+     * Skip the current character by NOT including it in the next token and move on to the next character.
      */
     fun ignore(): Tokenizer = ifContent {
         Sequencer(it.drop(1))
