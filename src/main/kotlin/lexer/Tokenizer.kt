@@ -1,116 +1,126 @@
 package com.sanity.compiler.lexer
 
-data class Token(val content: String)
+import com.sanity.compiler.utils.Generator
+import com.sanity.compiler.utils.GeneratorStep
+
+data class Token(val content: String, val isStringLiteral: Boolean = false)
 
 /**
- * Helper class used to tokenize a sequence of characters. This is a language-independent tokenizer, which can work with
- * any hypothetical lexical struture.
+ * Helper class used to tokenize a Generator of characters. This is a language-independent tokenizer, which can work
+ * with any hypothetical lexical structure.
  */
-class Tokenizer(private var generator: Sequence<Char>) {
-    private data class Sequencer(val generator: Sequence<Char>, val buffer: String = "")
+class Tokenizer(private val generator: Generator<Char>) {
+    private var currentStep: GeneratorStep<out Char> = generator.next()
+    private var buffer = ""
+    private var result: Token? = null
 
-    private var buffer: String = ""
-    private var result: String? = null
-
-    private fun contentToParse(): Boolean {
-        return result == null && generator.count() >= 1
+    /**
+     * Gets the next value from the generator and store it in this.currentStep.
+     */
+    private fun next() {
+        this.currentStep = generator.next()
     }
 
     /**
-     * If there is content left to analyze, invoke the given function and update local state with its results.
+     * Executes the given lambda if there is still content to analyze and the current token is not yet complete.
      */
-    private fun ifContent(cb: (Sequence<Char>) -> Sequencer): Tokenizer {
-        if (contentToParse()) {
-            val sequencer = cb(generator)
-            generator = sequencer.generator
-            buffer += sequencer.buffer
+    private fun ifNotDone(cb: (Char) -> Unit): Tokenizer {
+        if (this.currentStep !is GeneratorStep.Done && this.result == null) {
+            cb((this.currentStep as GeneratorStep.Value).value)
         }
 
         return this
     }
 
     /**
-     * While there is content left to analyze and the given predicate passes, then invoke the given function and update
-     * local state with its results.
+     * Executes the given lambda as long as there is still content to analyze, the current token is not yet complete,
+     * the callback has not returned that it is done.
      */
-    private fun whileContent(condition: (Sequence<Char>) -> Boolean, cb: (Sequence<Char>) -> Sequencer): Tokenizer {
-        while (contentToParse() && condition(generator)) {
-            val sequencer = cb(generator)
-            generator = sequencer.generator
-            buffer += sequencer.buffer
+    private fun whileNotDone(cb: (Char) -> Boolean): Tokenizer {
+        var stop = false
+        while (this.currentStep !is GeneratorStep.Done && !stop && this.result == null) {
+            stop = cb((this.currentStep as GeneratorStep.Value).value)
         }
 
         return this
     }
 
     /**
-     * If the current character matches the given Regex, invoke the provided callback.
+     * As long as the generator's first character matches the given Regex, invoke the callback.
      */
-    fun match(matcher: Regex, cb: (Tokenizer) -> Unit): Tokenizer {
-        if (contentToParse() && matcher.matches(generator.first().toString())) {
+    fun repeat(regex: Regex, cb: (Tokenizer) -> Unit) = whileNotDone {
+        if (regex.matches(it.toString())) {
             cb(this)
-        }
-
-        return this
-    }
-
-    /**
-     * While the current character matches the given Regex, invoke the provided callback.
-     */
-    fun repeat(matcher: Regex, cb: (Tokenizer) -> Unit): Tokenizer {
-        while (contentToParse() && matcher.matches(generator.first().toString())) {
-            cb(this)
-        }
-
-        return this
-    }
-
-    /**
-     * Consume the current character by including it in the next token and move on to the next character.
-     */
-    fun consume(): Tokenizer = ifContent {
-        Sequencer(it.drop(1), it.first().toString())
-    }
-
-    /**
-     * As long as the current character matches the provided regex, consume it by including it in the next token and
-     * move on to the next character.
-     */
-    fun consumeWhile(match: Regex): Tokenizer = whileContent({ match.matches(it.first().toString()) }) {
-        Sequencer(it.drop(1), it.first().toString())
-    }
-
-    /**
-     * Skip the current character by NOT including it in the next token and move on to the next character.
-     */
-    fun ignore(): Tokenizer = ifContent {
-        Sequencer(it.drop(1))
-    }
-
-    /**
-     * Signifies that the tokenizer has completed its next token. Save the current value to be returned when it is
-     * requested and block all further processing until it is extracted.
-     */
-    fun done(): Tokenizer {
-        if (result == null && buffer != "") {
-            result = buffer
-            buffer = ""
-        }
-
-        return this
-    }
-
-    /**
-     * Return the token parsed and reset the Tokenizer for the next iteration.
-     */
-    fun tokenize(): Token? {
-        if (result != null) {
-            val token = Token(result!!)
-            result = null
-            return token
+            return@whileNotDone false /* stop */
         } else {
-            if (generator.count() == 0) return null
-            else throw AssertionError("Attempted to tokenize with nothing in the buffer.")
+            return@whileNotDone true /* stop */
+        }
+    }
+
+    /**
+     * If the generator's first character matches the given Regex, invoke the callback.
+     */
+    fun match(regex: Regex, cb: (Tokenizer) -> Unit) = ifNotDone {
+        if (regex.matches(it.toString())) {
+            cb(this)
+            return@ifNotDone
+        }
+    }
+
+    /**
+     * Ignore the given number of characters and do not add them to the next token.
+     */
+    fun ignore(count: Int = 1): Tokenizer {
+        if (count <= 0) return this
+
+        ifNotDone {
+            next()
+        }
+
+        this.ignore(count - 1)
+        return this
+    }
+
+    /**
+     * Consume the given number of characters by adding them to the next token.
+     */
+    fun consume(count: Int = 1): Tokenizer {
+        if (count <= 0) return this
+
+        ifNotDone {
+            this.buffer += it
+            next()
+        }
+
+        this.consume(count - 1)
+        return this
+    }
+
+    /**
+     * Stop parsing charaters on this iteration and save the current state for use as the next retrieved token.
+     * After #tokenize() is called, this state is cleared and processing continues.
+     */
+    fun done(isStringLiteral: Boolean = false): Tokenizer {
+        if (this.result != null) return this // Already stored a token previously
+
+        if (this.buffer == "") this.result = null
+        else {
+            this.result = Token(this.buffer, isStringLiteral)
+            this.buffer = ""
+        }
+
+        return this
+    }
+
+    /**
+     * Extract the currently captured token and reset the state of the tokenizer to read the next token.
+     */
+    fun tokenize(): GeneratorStep<Token> {
+        return if (this.result == null) GeneratorStep.Done()
+        else {
+            val result = this.result
+            this.result = null
+            GeneratorStep.Value(result!!)
         }
     }
 }
