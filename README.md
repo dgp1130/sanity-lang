@@ -389,6 +389,38 @@ The use of copy constructors is required for this kind of problem and is very co
 to follow. Most experienced programmers are used to this, but try explaining to a
 beginner and its complexity becomes immediately obvious.
 
+As one more example, the `Serializable` interface in Java is a perfect example of what
+constructors do poorly. It is impossible to define this interface in simple fashion in Java
+and it is actually implemented by the language itself, with special keywords and semantics
+rather than by actual Java code. Deserializing a class does not invoke its constructor,
+which makes no sense in the case of Java. However, this can be done quite easily using this
+replacement for constructors.
+
+```java
+public interface Serializable<T> {
+    public void serialize(OutputStream out);
+    public static T deserialize(InputStream in); // Assuming interfaces can support static methods.
+}
+
+public class Model implements Serializable<Model> {
+    final int foo;
+    
+    public void serialize(final OutputStream out) {
+        out.writeInt(foo);
+    }
+    
+    public static Model deserialize(final InputStream in) {
+        return new Model(foo = in.readInt());
+    }
+}
+```
+
+This does have a bit of an issue with inheritence because `deserializable` returns a `T`
+while an abstract parent class would have to return a `ctor<T>`. This could be solved with
+an algebraic OR of the types (which Sanity will support, see [Type System](#type-system))
+or another construct could be added. A `ctor<Model>` could be returned with some kind of
+`create()` method if absolutely necessary.
+
 The only major issue I see with this inheritence model is that superclasses do not have
 any hook which executes at construction-time (when the final concrete subclass instantiates
 the object). This means that superclasses can't perform any initialization at
