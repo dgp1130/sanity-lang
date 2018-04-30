@@ -457,7 +457,13 @@ objects which has the potential to be much better than existing construction par
 
 ### Mixins
 
-### Variables Read-Only by Default
+### Type System
+
+#### Typesafe Anonymous Objects
+
+#### First-Class Generics
+
+#### No Nulls
 
 ### Context
 
@@ -466,3 +472,16 @@ objects which has the potential to be much better than existing construction par
 ### Elm-style Streams
 
 ### Testing Support
+
+### Properties
+
+### Events
+
+#### Deep Notify
+
+### Miscellaneous
+
+#### Variables Read-Only by Default
+
+#### this Always Lexically Bound
+
