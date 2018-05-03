@@ -1,3 +1,0 @@
-# Specify line endings for platform-specific files
-gradlew text eol=lf
-gradlew.bat text eol=crlf
