@@ -14,10 +14,10 @@ big programming language!
 ## Overview
 
 Sanity is a compiled strongly-typed language somewhere between object-oriented and
-functional. Current plans are to compile it to the Java Virtual Machine (JVM) and
-execute it on that platform. This would allow it to be run on just about any
-machine without requiring me to generate assembly for every assembler on the
-market.
+functional. Current plans are to compile it with LLVM as a backend. This would
+allow it to be run on just about any machine without requiring me to generate
+assembly for every assembler on the market and is the standard tool for this kind
+of project.
 
 ## Feature List
 
