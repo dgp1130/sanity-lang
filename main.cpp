@@ -27,11 +27,13 @@ int main(const int argc, const char* argv[]) {
     }
 
     // Tokenize the characters.
-    std::queue<Token> tokens = Lexer::tokenize(chars);
+    std::queue<const Token*> tokens = Lexer::tokenize(chars);
 
     // Print tokens for now.
     while (!tokens.empty()) {
-        std::cout << tokens.front();
+        const Token* token = tokens.front();
+        std::cout << "Token: " << *token << std::endl;
+        delete token;
         tokens.pop();
     }
     std::cout << std::endl;

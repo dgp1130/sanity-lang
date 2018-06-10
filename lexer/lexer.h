@@ -8,7 +8,7 @@ namespace Lexer {
     /**
      * Tokenize the given queue of characters into a queue of Tokens.
      */
-    std::queue<Token> tokenize(std::queue<char>& chars);
+    std::queue<const Token*> tokenize(std::queue<char>& chars);
 }
 
 #endif //SANITY_LEXER_H

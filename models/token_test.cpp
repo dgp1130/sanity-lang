@@ -2,6 +2,12 @@
 #include <sstream>
 #include "token.h"
 
+TEST(Token, SavesSourceText) {
+    const auto token = Token("test");
+
+    ASSERT_EQ("test", token.source);
+}
+
 TEST(Token, PrintsSourceText) {
     const auto token = Token("test");
     auto stream = std::ostringstream();

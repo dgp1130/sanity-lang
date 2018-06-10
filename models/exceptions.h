@@ -19,6 +19,17 @@ namespace Exceptions {
 
         const char* what() const noexcept override;
     };
+
+    /**
+     * Exception to throw when an illegal state is detected which makes it impossible to continue.
+     */
+    struct IllegalStateException : public std::exception {
+        const std::string reason;
+
+        explicit IllegalStateException(const std::string& reason = "IllegalStateException") : reason(reason) { }
+
+        const char* what() const noexcept override;
+    };
 }
 
 #endif //SANITY_ERRORS_H

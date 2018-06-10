@@ -55,8 +55,10 @@ include_directories("${gtest_SOURCE_DIR}/include")
 add_library(exceptions models/exceptions.cpp models/exceptions.h)
 add_library(file_utils utils/file_utils.cpp utils/file_utils.h)
 add_library(lexer lexer/lexer.cpp lexer/lexer.h)
+add_library(stream lexer/stream.cpp lexer/stream.h)
 add_library(token models/token.cpp models/token.h)
-set(SANITY_LIBS exceptions file_utils lexer token)
+add_library(queue_utils utils/queue_utils.cpp utils/queue_utils.h)
+set(SANITY_LIBS exceptions file_utils lexer stream token queue_utils)
 
 # Build the Sanity executable and link it against its dependencies.
 add_executable(Sanity main.cpp)
@@ -65,8 +67,11 @@ target_link_libraries(Sanity ${SANITY_LIBS})
 # Build the Sanity test executable with all test files and link it against its dependencies.
 add_executable(
     SanityTest
+    lexer/lexer_test.cpp
+    lexer/stream_test.cpp
     models/token_test.cpp
     models/exceptions_test.cpp
     utils/file_utils_test.cpp
+    utils/queue_utils_test.cpp
 )
 target_link_libraries(SanityTest gtest gtest_main ${SANITY_LIBS})
