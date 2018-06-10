@@ -61,3 +61,12 @@ cmake_install.cmake
 install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
+
+# Sanity exclusions
+build/
+
+# These should be placed under build/ by CMake, but for the life of me I can't figure out how to do that.
+*.pc
+
+# I don't use Code::Blocks, so I don't know why this is built in the first place, and I can't move it either.
+Sanity.cbp

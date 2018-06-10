@@ -23,5 +23,7 @@ std::queue<char> FileUtils::readFileChars(const std::string& filename) {
         chars.push(c);
     }
 
+    fileStream.close();
+
     return chars;
 }
