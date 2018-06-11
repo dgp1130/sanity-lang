@@ -6,7 +6,7 @@ random ideas I had about ways to improve existing languages.
 Every programming language has its faults and as generations of languages progress
 they slowly improve. Throughout my work I've come across a few things I think
 could be done better. This language serves the purpose of trying out many of these
-ideas to discover their practicality and usefullness. Most are probably trash, but
+ideas to discover their practicality and usefulness. Most are probably trash, but
 maybe one or two will prove to be an improvement on modern programming paradigms.
 If anything works out particularly well, maybe it could be included in the next
 big programming language!
@@ -18,6 +18,27 @@ functional. Current plans are to compile it with LLVM as a backend. This would
 allow it to be run on just about any machine without requiring me to generate
 assembly for every assembler on the market and is the standard tool for this kind
 of project.
+
+## Philosophy
+
+Sanity is a collage of random ideas I had about ways to improve modern programming
+languages. As a result, it is somewhat lacking of a core philosophy which drives its
+design. However, if it did have one, it would prioritize code maintenance and
+intuitiveness above all else. Bugs tend to come from unintuitive or confusing code
+when changes to one system have unexpected effects on other systems. Sanity
+prioritizes features which enable code changes to be easy to reason about and
+minimize the unexpected impact they can have. It also tries to be as intuitive and
+straightforward as possible, following the principle of least surprise to avoid
+potential bugs and issues from developers who may not be experts in the language.
+
+This is not to detract from other important features of a programming language, such
+as performance, it simply places a stronger emphasis on maintainability and
+predictability over those other features. Sanity also does not attempt to make a
+completely "safe" language, where it is impossible for one to shoot themselves in the
+foot. Such a language is impossible and Sanity does not attempt to solve human
+stupidity. Rather, it provides features which allow a competent yet non-genius
+developer to write maintainable, stable code which can survive many unexpected changes
+and modifications with minimal bugs. 
 
 ## Feature List
 
