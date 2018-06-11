@@ -11,7 +11,7 @@ class Stream {
 private:
     std::deque<char> chars;
     std::deque<char> buffer;
-    Token* result;
+    const Token* result;
 
 public:
     explicit Stream(std::queue<char>& chars);
@@ -29,23 +29,30 @@ public:
     /**
      * Consumes the characters for as a long as the regex matches up to the limit number of characters.
      */
-    Stream* consumeWhile(std::regex matcher, int limit);
+    Stream* consumeWhile(const std::regex& matcher, int limit);
 
     /**
      * If the current state of the stream matches the given regex up to the limit number of characters, then the
      * callback is invoked.
      */
-    Stream* match(std::regex matcher, int limit, std::function<void (Stream*)> callback);
+    Stream* match(const std::regex& matcher, int limit, std::function<void (Stream*)> callback);
 
     /**
      * As long as the current state of the stream matches the given regex up to the limit number of characters, then
      * the callback is invoked.
      */
-    Stream* repeat(std::regex matcher, int limit, std::function<void (Stream*)> callback);
+    Stream* repeat(const std::regex& matcher, int limit, std::function<void (Stream*)> callback);
 
     /**
-     * Saves the current state of the buffer and will return a Token of that state when extractResult() is called. All
-     * other functionality is blocked until the Token is extracted.
+     * Saves the current state of the buffer and will return a Token as provided by the producer of this state when
+     * extractResult() is called. All other functionality is blocked until the Token is extracted.
+     * @see #extractResult()
+     */
+    void returnToken(std::function<const Token* (const std::string&)> tokenProducer);
+
+    /**
+     * Saves the current state of the buffer and will return a standard Token with no special options of this state when
+     * extractResult() is called. All other functionality is blocked until the Token is extracted.
      * @see #extractResult()
      */
     void returnToken();

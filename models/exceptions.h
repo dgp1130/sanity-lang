@@ -30,6 +30,17 @@ namespace Exceptions {
 
         const char* what() const noexcept override;
     };
+
+    /**
+     * Exception to throw on a syntax error encountered during lexical analysis.
+     */
+    struct SyntaxException : public std::exception {
+        const std::string message;
+
+        explicit SyntaxException(const std::string& message) : message(message) { }
+
+        const char* what() const noexcept override;
+    };
 }
 
 #endif //SANITY_ERRORS_H

@@ -1,7 +1,10 @@
 #include <gtest/gtest.h>
 #include "lexer.h"
 #include "../utils/queue_utils.h"
+#include "../models/exceptions.h"
 #include <queue>
+
+typedef Exceptions::SyntaxException SyntaxException;
 
 TEST(Lexer, TokenizesWholeWords) {
     std::queue<char> q = QueueUtils::queueify("Hello");
@@ -59,6 +62,24 @@ TEST(Lexer, TokenizesNumbers) {
     tokens.pop();
     ASSERT_EQ("test", second->source);
     delete second;
+}
+
+TEST(Lexer, TokenizesCharacters) {
+    std::queue<char> q = QueueUtils::queueify("\'a\'");
+    std::queue<const Token*> tokens = Lexer::tokenize(q);
+
+    ASSERT_EQ(1, tokens.size());
+
+    const Token* token = tokens.front();
+    tokens.pop();
+    ASSERT_EQ("a", token->source);
+    ASSERT_EQ(true, token->isCharLiteral);
+    delete token;
+}
+
+TEST(Lexer, TokenizingInvalidCharactersThrowsSyntaxException) {
+    std::queue<char> q = QueueUtils::queueify("\'ab");
+    ASSERT_THROW(Lexer::tokenize(q), SyntaxException);
 }
 
 TEST(Lexer, TokenizesPunctuation) {

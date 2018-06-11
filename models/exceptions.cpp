@@ -3,6 +3,7 @@
 
 typedef Exceptions::FileNotFoundException FileNotFoundException;
 typedef Exceptions::IllegalStateException IllegalStateException;
+typedef Exceptions::SyntaxException SyntaxException;
 
 const char* FileNotFoundException::what() const noexcept {
     const std::string message = std::string("File not found: ") + this->filePath;
@@ -16,4 +17,8 @@ const char* FileNotFoundException::what() const noexcept {
 
 const char* IllegalStateException::what() const noexcept {
     return this->reason.c_str();
+}
+
+const char* SyntaxException::what() const noexcept {
+    return this->message.c_str();
 }

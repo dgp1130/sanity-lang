@@ -57,8 +57,9 @@ add_library(file_utils utils/file_utils.cpp utils/file_utils.h)
 add_library(lexer lexer/lexer.cpp lexer/lexer.h)
 add_library(stream lexer/stream.cpp lexer/stream.h)
 add_library(token models/token.cpp models/token.h)
+add_library(token_builder models/token_builder.cpp models/token_builder.h)
 add_library(queue_utils utils/queue_utils.cpp utils/queue_utils.h)
-set(SANITY_LIBS exceptions file_utils lexer stream token queue_utils)
+set(SANITY_LIBS exceptions file_utils lexer stream token token_builder queue_utils)
 
 # Build the Sanity executable and link it against its dependencies.
 add_executable(Sanity main.cpp)

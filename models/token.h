@@ -6,8 +6,13 @@
 class Token {
 public:
     const std::string source;
+    const bool isCharLiteral;
 
-    explicit Token(const std::string& source) : source(source) { }
+    /**
+     * Construct a Token with the given values. This API kind of sucks, so use TokenBuilder instead.
+     * @see TokenBuilder
+     */
+    explicit Token(const std::string& source, bool isCharLiteral);
 
     friend std::ostream& operator<<(std::ostream&, const Token&);
 };

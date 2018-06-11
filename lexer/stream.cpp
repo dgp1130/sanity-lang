@@ -5,6 +5,7 @@
 #include <functional>
 #include "../models/token.h"
 #include "../models/exceptions.h"
+#include "../models/token_builder.h"
 
 typedef Exceptions::IllegalStateException IllegalStateException;
 
@@ -63,7 +64,7 @@ Stream* Stream::consume(const int numChars) {
     return this;
 }
 
-Stream* Stream::consumeWhile(const std::regex matcher, const int limit) {
+Stream* Stream::consumeWhile(const std::regex& matcher, const int limit) {
     if (!this->active()) return this;
 
     this->repeat(matcher, limit, [](Stream* stream) {
@@ -73,7 +74,7 @@ Stream* Stream::consumeWhile(const std::regex matcher, const int limit) {
     return this;
 }
 
-Stream* Stream::match(const std::regex matcher, const int limit, const std::function<void (Stream*)> callback) {
+Stream* Stream::match(const std::regex& matcher, const int limit, const std::function<void (Stream*)> callback) {
     if (!this->active()) return this;
 
     const std::string str = dequeToString(this->chars, (unsigned long) limit);
@@ -86,7 +87,7 @@ Stream* Stream::match(const std::regex matcher, const int limit, const std::func
     return this;
 }
 
-Stream* Stream::repeat(const std::regex matcher, const int limit, const std::function<void(Stream*)> callback) {
+Stream* Stream::repeat(const std::regex& matcher, const int limit, const std::function<void(Stream*)> callback) {
     if (!this->active()) return this;
 
     bool matched;
@@ -99,9 +100,15 @@ Stream* Stream::repeat(const std::regex matcher, const int limit, const std::fun
     return this;
 }
 
-void Stream::returnToken() {
-    this->result = new Token(dequeToString(this->buffer));
+void Stream::returnToken(const std::function<const Token* (const std::string&)> tokenProducer) {
+    this->result = tokenProducer(dequeToString(this->buffer));
     this->buffer = std::deque<char>();
+}
+
+void Stream::returnToken() {
+    this->returnToken([](const std::string& source) {
+        return TokenBuilder(source).build();
+    });
 }
 
 const Token* Stream::extractResult() {
