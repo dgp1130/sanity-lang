@@ -19,8 +19,8 @@ TEST(Token, PrintsSourceText) {
 
 TEST(Token, SavesCharLiteralState) {
     const auto charToken = Token("a", true /* isCharLiteral */);
-    ASSERT_EQ(true, charToken.isCharLiteral);
+    ASSERT_TRUE(charToken.isCharLiteral);
 
     const auto nonCharToken = Token("test", false /* isCharLiteral */);
-    ASSERT_EQ(false, nonCharToken.isCharLiteral);
+    ASSERT_FALSE(nonCharToken.isCharLiteral);
 }
