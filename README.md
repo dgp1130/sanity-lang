@@ -449,7 +449,7 @@ never happen in practice. This would include assertion errors, illegal argument 
 and other issues which indicate a programming issue which is unrecoverable. As an example:
 
 ```
-function colorShape(Shape shape, string color) {
+function colorShape(shape: Shape, color: string) {
     if (color == "red") {
         ...
     } else if (color == "blue") {
