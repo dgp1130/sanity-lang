@@ -202,8 +202,8 @@ let roadtrip: Roadtrip = {car = myCar, driver = me};
 
 Anonymous objects provide a lightweight and simple solution to composing multiple pieces
 of data into a single entity. Sanity will also support algebraic types (notably the OR)
-to enable a single type to represent multiple possible values. See [No Nulls](#no-nulls)
-for details on this.
+to enable a single type to represent multiple possible values. See
+[Null and Exceptions](#null-and-exceptions) for details on this.
 
 #### Type-safe Anonymous Objects
 
@@ -347,7 +347,133 @@ values and types can be easily stored with any additional complexity.
 
 #### First-Class Generics
 
-#### No Nulls
+#### Null and Exceptions
+
+`null` has been called the "billion-dollar mistake", and while I don't entirely agree with that, the
+current concept of `null` can be drastically improved. `null` has quite a few problems in its current
+incarnation.
+
+* Attempting to deference a `null` is a runtime exception.
+* `null` exceptions are difficult or impossible to detect at compile-time.
+* `null` is a single value which represents the lack of a value. Logically however, there may be many
+different forms of "no value". For instance, not connecting to the server might yield a `null` value,
+but successfully connecting and then receiving a server error might also yield a `null` value despite
+the fact that they represent different outcomes.
+* `null` often overlaps with exceptions. When should one return a `null` and when should one throw an
+exception?
+
+Exceptions also have a few interesting challenges:
+
+* Checked exceptions in languages like Java allow the compiler to verify that all exceptions are
+handled. Most languages do not have this guarantee and most developers don't use checked exceptions.
+This means it is hard to know what exceptions a given function call can make and whether or not you
+have handled all of them.
+* try-catch syntax is not perfect. It often covers more statements than it needs to, and if one of
+them throws an exception, it may be caught in a manner that was not expected. For instance:
+
+```java
+try {
+    final Car car = requestCarInfo(carId);
+    saveToDatabase(car);
+} catch (final NetworkException ex) {
+    System.out.println("Failed to get car info.");
+}
+```
+
+Here, the try-catch was intended to catch an error from `requestCarInfo()` but `saveToDatabase()`
+actually makes a network request and can throw a `NetworkException`. If it does, it will be caught
+too and display the wrong error message. The `saveToDatabase()` call cannot be easily moved out of
+the try-catch because it requires access to `car` which must be inside the try-catch. The declaration
+of `car` can be moved out of the try-catch, leaving the initialization inside. However, this means it
+cannot be `final` for no good reason and will be in scope for much longer than is necessary.
+
+Sanity solves these problems by removing the concept of `null` as a singular value and replacing the
+`throw` semantic, instead *returning* the errors directly. It uses algebraic types to pull this off.
+In Sanity, any type can be the algebraic OR of multiple other types. These types may or may not
+contain data and can declared inline. As an example:
+
+```
+// Car is an existing class, but TransportError and ServerError are declared inline, so they use the
+// `type` keyword. TransportError is simply a type with no data, while ServerError contains a message.
+function requestCarInfo(carId: int) -> Car | type TransportError | type ServerError {message: string} {
+    ...
+    
+    if (...) {
+        return new Car();
+    } else if (...) {
+        return new TransportError();
+    } else {
+        return new ServerError({message: response.message});
+    }
+}
+
+function lookupCar(carId: int) {
+    // This type is explicitly listed for clarity, the := operator could be used to infer the type.
+    let result: Car | TransportError | ServerError = requestCarInfo(carId);
+    
+    // The `when` operator invokes the appropriate lambda function provided for the type of the result.
+    // The `result` variable is casted to the relevant type in the body of each function.
+    when (result) {
+        Car = print("Make: " + result.make + ", Model: " + result.model);
+        TransportError = print("There was a network error, please try again.");
+        ServerError = { // Multi-line lambdas are acceptable.
+            print("The server returned an error: " + result.message);
+        };
+    }
+}
+```
+
+Instead of using `null` or exceptions to handle the error cases of this function, it simply returns an
+algebraic OR of the various outcomes it can have with the appropriate data. The caller uses the `when`
+operator to disambiguate the possibilities and perform the appropriate action. The `when` operator works
+by utilizing reflection to check the type of the result and then invoking the lambda associated with that
+type. It auto casts the value to the more specific type to save programmer effort. The `when` operator also
+requires that all possible types are handled. This ensures that no cases are missed without requiring the
+overhead of checked exceptions. The caller can directly handle the error, or it can easily return it back
+up to its caller by adding it to its own possible responses. This allows errors to propagate up the call
+stack until they end up at the appropriate level of abstraction for handling them.
+
+Existing types can be combined into an algebraic OR by utilizing the `|` operator, and throwaway types can
+be declared inline using the `type` keyword. A `type` followed by only a name is simply a symbol which
+represents a particular outcome with no associated data. A `type` can be followed by an anonymous object
+which contains all the data for that type.
+
+Unfortunately, this won't fully enforce that all outcomes are handled at compile-time. The `result` type
+can be hard casted to any of its subtypes, which will be a runtime error if not possible. Hopefully, such
+an action should be relatively rare and unnecessary.
+
+Beyond replacing the concept of `null`, this also replaces many uses of exceptions, certainly checked
+exceptions. However, Sanity will still have unchecked exceptions because there are a couple uses for them
+which are not covered by this idea. The main use of unchecked exceptions is for runtime errors which should
+never happen in practice. This would include assertion errors, illegal argument errors, illegal state errors,
+and other issues which indicate a programming issue which is unrecoverable. As an example:
+
+```
+function colorShape(Shape shape, string color) {
+    if (color == "red") {
+        ...
+    } else if (color == "blue") {
+        ...
+    } else {
+        throw new IllegalArgumentError("Unknown color: " + color);
+    }
+}
+```
+
+There is no practical instance where a caller would catch the `IllegalArgumentException` and be able to do
+anything useful to handle it. As a result, the idea of returning an `IllegalArgument` type, is not useful to
+the caller and simply gets in the way without providing any benefit. There are a few reasons to `catch` an
+exception, though not particularly many:
+
+* Runners which catch a fatal error, and then restart the program.
+* Test frameworks which use errors to propagate assertion failures. Manually declaring and returning these
+assertions from each test would be infuriating.
+* A logger which catches exceptions simply to log them and possibly rethrow.
+
+As a result, Sanity will have exceptions to support these use cases, but 99% of error cases, should return
+algebraic types with all possible outcomes. This is a better system for these common use cases, while
+throwing exceptions should only be used for extreme instances where returning exceptions up the call stack
+is impractical.
 
 ### Context
 
