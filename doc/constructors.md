@@ -91,7 +91,7 @@ However, if you wish to return early, you should use `return;` without `this`. W
 Many languages fix specific parts of these issues. Dart has named constructors. JavaScript
 allows other statements before a `super()` call provided they don't access `this`. C# uses
 a `: base()` syntax to pull the `super()` call out of the body of the function, which is
-more intuitive. Kotlin omits the `new` operator. These all improves things slightly, but
+more intuitive. Kotlin omits the `new` operator. These all improve things slightly, but
 don't change the underlying functionality of constructors and the inheritance hierarchy
 model, particularly in the direct coupling of a subclass' construction to that of its
 superclass. I am asserting that the this core concept of constructors is flawed and can be
@@ -102,8 +102,8 @@ I believe this can be done better in a far simpler and more flexible fashion.
 
 My solution to this problem is to decouple subclass construction from superclass
 construction. With this one change the overall model of constructors can be completely
-reworked to solve a lot of these issues. Lets start off simple without worry about inheritance.
-Consider the following Java-like snippet:
+reworked to solve a lot of these issues. Lets start off simple without worrying about
+inheritance. Consider the following Java-like snippet:
 
 ```java
 public class Model {
@@ -179,20 +179,20 @@ of logic in a traditional constructor would require nested ternary operations wh
 complicated and difficult to read.
 
 One other advantage is that the implementation detail of having created an object is missing
-from the caller provides much more flexibility as a result. Consider the following case:
+from the caller which provides much more flexibility as a result. Consider the following case:
 
 ```java
 public class Model {
     final int foo;
     
-    public static Model create(final int foo) {
+    public static Model from(final int foo) {
         return new Model(foo = foo);
     }
 }
 
 public class Elsewhere {
     public static void doSomething() {
-        final Model model = Model.create(0);
+        final Model model = Model.from(0);
     }
 }
 ```
@@ -208,10 +208,11 @@ public class Model {
     
     final int foo;
     
-    public static Model create(final int foo) {
+    public static Model from(final int foo) {
         final Model cachedModel = map.get(foo);
-        if (cachedModel != null) return cachedModel;
-        else {
+        if (cachedModel != null) {
+            return cachedModel;
+        } else {
             final Model model = new Model(foo = foo);
             map.put(foo, model);
             return model;
@@ -221,7 +222,7 @@ public class Model {
 
 public class Elsewhere {
     public static void doSomething() {
-        final Model model = Model.create(0);
+        final Model model = Model.from(0);
     }
 }
 ```
@@ -282,8 +283,8 @@ In the above example, the super class is not constructed directly, but rather ma
 This structure decouples superclass construction from subclass construction. Any number of
 operations or function calls could be made between the two. The `ctor<SuperModel>` could
 be passed in and out of functions, saved to a `Map`, retrieved at later time, and then
-instantiated into a `Model`. `abstract` classes can only become a `ctor<T>` while `final`
-classes can never be a `ctor<T>`.
+instantiated into a `Model`. `abstract` classes can *only* become a `ctor<T>` while `final`
+classes can *never* be a `ctor<T>`.
 
 I have used the term "factory" to describe functions which return a new instance of a class
 or a `ctor` of a class. In Java-land, "factories" are typically static methods, but that is
