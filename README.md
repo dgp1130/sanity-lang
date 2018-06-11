@@ -96,6 +96,109 @@ why existing constructor models are terrible and how they can be done better.
 
 ### Type System
 
+Sanity is a strongly-typed compiled language. It's syntax is built on declaring the name
+of a variable first, followed by the type delimited by a colon (similar to TypeScript or
+Kotlin). I think there's a name for this kind of declaration syntax, but for the life of
+me I can't remember it. This format is used not to solve any particular problem in existing
+programming languages, since syntax is one of the least important aspects of a language.
+Rather it is this way because of a theory I have about how humans think.
+
+Whenever I find myself using a C-like language, I say to myself "I need a counter." so I
+type `counter`. Then I move the cursor to the start and say "Oh, this counter needs to be
+an integer." and add an `int` to the front to get `int counter`. Conceptually, I knew the
+concept that I wanted to express, and understood it as a `counter`. I then decided, that
+the appropriate type for this counter was an `int`. I cannot think of any way in which my
+brain would say "I need an integer." and *then* say "Oh, and that integer should be called
+`counter`." Of course, I have no real data to back up this assertion, and other individuals
+may think differently. However, I'm willing to bet that my thought process is more likely
+than the alternative. As a result, Sanity puts the variable name first, and its type second.
+This is intended to make written the language more fluent because it will align with how the
+human brain expresses these concepts. If this were a language that was intended for
+full-scale use, I might put more effort into this. However, because it is an experimental
+language, I can simply say: "It's my language, so I'm gonna do it the way I want to."
+
+The general syntax would look something like the following. Since this language is still so
+early in its development this may not be entirely thought out or necessary accurate of the
+final product.
+
+```
+var counter: int = 0;
+counter = 1;
+
+let counter2: int = 0;
+counter2 = 1; // ERR: Cannot reassign a read-only value defined with `let`
+```
+
+The `var` keyword denotes a variable declaration which can be modified. The `let` keyword
+denotes a constant declaration which cannot be modified. The type is inferred by using the
+`:=` operator, which allows the developer to omit the type and let it be inferred from the
+value assigned to it.
+
+```
+var counter := 1; // Counter implicitly has the type int.
+counter = "Hello"; // ERR: Cannot assign a string to an integer variable.
+```
+
+Note, that inferred types are not dynamic, their type cannot change over time like
+JavaScript or C#'s `dynamic`. Classes can simply be typed by their name while lambdas use
+a more complex syntax.
+
+```
+let myCar: Car = new Car("Mitsubishi Eclipse");
+
+// Map integers to strings in a one-line function with an implicit return.
+let mapper: (number: int) -> string = number.toString();
+
+// Multi-line lambdas can use a block syntax.
+let complexMapper: (number: int) -> string = {
+    let incremented = number + 1;
+    return incremented.toString();
+};
+
+// Lambda declarations without associated definitions may omit parameter names.
+function map(list: List<int>, mapper: (int) -> string) {
+    ...
+}
+```
+
+Anonymous objects can be used for named parameters to functions and to group multiple
+sets of data into a single object using JavaScript-like destructure syntax. See
+[Type-safe Anonymous Objects](#type-safe-anonymous-objects) for more details.
+
+```
+let myCar: Car = new Car();
+let me: Person = new Person();
+
+// A complex anonymous object type can be declared inline.
+let roadtrip: {car: Car, driver: Person} = {car = myCar, driver = me};
+
+// That can get verbose, so the same type can be inferred from the value.
+let secondRoadtrip := {car = myCar, driver = me};
+
+// Anonymous object types can be used in function parameters.
+function startTrip(trip: {car: Car, driver: Person}) { ... }
+startTrip(roadtrip);
+
+// Anonymous object types provide a named argument solution, where the values can be
+// provided individually.
+let friendsCar: Car = new Car();
+let friend: PErson = new Person();
+startTrip({car = friendsCar, driver = friend});
+```
+
+For complex lambdas or anonymous objects, it can be annoying to refer to them by listing
+out the type each time. This can be alleviated through a type alias.
+
+```
+alias Mapper = (int) -> string;
+function map(list: List<int>, mapper: Mapper) { ... }
+
+alias Roadtrip = {car: Car, driver: Person};
+let myCar: Car = new Car();
+let me: Person = new Person();
+let roadtrip: Roadtrip = {car = myCar, driver = me};
+```
+
 #### Type-safe Anonymous Objects
 
 In strongly typed object-oriented languages, classes and structs tend to be explicitly
