@@ -112,7 +112,7 @@ brain would say "I need an integer." and *then* say "Oh, and that integer should
 `counter`." Of course, I have no real data to back up this assertion, and other individuals
 may think differently. However, I'm willing to bet that my thought process is more likely
 than the alternative. As a result, Sanity puts the variable name first, and its type second.
-This is intended to make written the language more fluent because it will align with how the
+This is intended to make writing the language more fluent because it will align with how the
 human brain expresses these concepts. If this were a language that was intended for
 full-scale use, I might put more effort into this. However, because it is an experimental
 language, I can simply say: "It's my language, so I'm gonna do it the way I want to."
@@ -120,6 +120,9 @@ language, I can simply say: "It's my language, so I'm gonna do it the way I want
 The general syntax would look something like the following. Since this language is still so
 early in its development this may not be entirely thought out or necessary accurate of the
 final product.
+
+The `var` keyword denotes a variable declaration which can be modified. The `let` keyword
+denotes a constant declaration which cannot be modified.
 
 ```
 var counter: int = 0;
@@ -129,10 +132,8 @@ let counter2: int = 0;
 counter2 = 1; // ERR: Cannot reassign a read-only value defined with `let`
 ```
 
-The `var` keyword denotes a variable declaration which can be modified. The `let` keyword
-denotes a constant declaration which cannot be modified. The type is inferred by using the
-`:=` operator, which allows the developer to omit the type and let it be inferred from the
-value assigned to it.
+The type can be inferred by using the `:=` operator, which allows the developer to omit
+the type and let it be inferred from the value assigned to it.
 
 ```
 var counter := 1; // Counter implicitly has the type int.
@@ -198,6 +199,11 @@ let myCar: Car = new Car();
 let me: Person = new Person();
 let roadtrip: Roadtrip = {car = myCar, driver = me};
 ```
+
+Anonymous objects provide a lightweight and simple solution to composing multiple pieces
+of data into a single entity. Sanity will also support algebraic types (notably the OR)
+to enable a single type to represent multiple possible values. See [No Nulls](#no-nulls)
+for details on this.
 
 #### Type-safe Anonymous Objects
 
