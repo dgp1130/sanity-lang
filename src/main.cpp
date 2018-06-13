@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 #include <queue>
 #include "utils/file_utils.h"
 #include "lexer/lexer.h"
@@ -30,7 +31,7 @@ int main(const int argc, const char* argv[]) {
     }
 
     // Tokenize the characters.
-    std::queue<const Token*> tokens;
+    std::queue<std::shared_ptr<const Token>> tokens;
     try {
         tokens = Lexer::tokenize(chars);
     } catch (const SyntaxException& ex) {

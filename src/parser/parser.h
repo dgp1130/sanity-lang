@@ -10,10 +10,11 @@
  */
 class Parser {
 private:
-    std::queue<const Token*> tokens;
+    std::queue<std::shared_ptr<const Token>> tokens;
 
-    const Token* match(const std::function<bool (const Token*)>& matcher, const std::string& errMsg);
-    const Token* match(const std::string& expected);
+    std::shared_ptr<const Token> match(const std::function<bool (std::shared_ptr<const Token>)>& matcher,
+        const std::string& errMsg);
+    std::shared_ptr<const Token> match(const std::string& expected);
 
     void file();
     void statement();
@@ -26,7 +27,7 @@ public:
     /**
      * Construct a parser which will parse the provided tokens and consume the queue.
      */
-    explicit Parser(std::queue<const Token*>& tokens);
+    explicit Parser(std::queue<std::shared_ptr<const Token>>& tokens);
 
     /**
      * Parse the tokens provided.

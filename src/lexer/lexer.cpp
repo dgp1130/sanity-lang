@@ -3,16 +3,17 @@
 #include "../models/token.h"
 #include "../models/token_builder.h"
 #include "../models/exceptions.h"
+#include <memory>
 #include <queue>
 #include <regex>
 
 typedef Exceptions::SyntaxException SyntaxException;
 
-std::queue<const Token*> Lexer::tokenize(std::queue<char>& chars) {
-    auto tokens = std::queue<const Token*>();
+std::queue<std::shared_ptr<const Token>> Lexer::tokenize(std::queue<char>& chars) {
+    auto tokens = std::queue<std::shared_ptr<const Token>>();
 
-    auto stream = new Stream(chars);
-    const Token* token;
+    auto stream = std::make_unique<Stream>(Stream(chars));
+    std::shared_ptr<const Token> token;
     do {
         token = stream->repeat(std::regex("^[ \t\n\r]"), 1, [](Stream* stream) {
             stream->ignore();

@@ -1,20 +1,22 @@
 #include <functional>
+#include <memory>
 #include "parser.h"
 #include "../models/token.h"
 #include "../models/exceptions.h"
 
 typedef Exceptions::ParseException ParseException;
 
-Parser::Parser(std::queue<const Token*>& tokens) {
+Parser::Parser(std::queue<std::shared_ptr<const Token>>& tokens) {
     this->tokens = tokens;
 }
 
-const Token* Parser::match(const std::function<bool (const Token*)>& matcher, const std::string& expected) {
+std::shared_ptr<const Token> Parser::match(const std::function<bool (std::shared_ptr<const Token>)>& matcher,
+        const std::string& expected) {
     if (this->tokens.empty()) {
         throw ParseException("Expected \"" + expected + "\", but got EOF.");
     }
 
-    const Token* token = this->tokens.front();
+    std::shared_ptr<const Token> token = this->tokens.front();
     if (matcher(token)) {
         this->tokens.pop();
         return token;
@@ -23,8 +25,8 @@ const Token* Parser::match(const std::function<bool (const Token*)>& matcher, co
     }
 };
 
-const Token* Parser::match(const std::string& expected) {
-    return this->match([&expected](const Token* token) { return token->source == expected; }, expected);
+std::shared_ptr<const Token> Parser::match(const std::string& expected) {
+    return this->match([&expected](std::shared_ptr<const Token> token) { return token->source == expected; }, expected);
 };
 
 // <file> => <statement> <file> | ø
@@ -35,15 +37,15 @@ void Parser::file() {
 // <statement> -> <function-call> ;
 void Parser::statement() {
     this->functionCall();
-    delete this->match(";");
+    this->match(";");
 }
 
 // <function-call> -> <identifier> ( <expression> )
 void Parser::functionCall() {
     this->identifier();
-    delete this->match("(");
+    this->match("(");
     this->expression();
-    delete this->match(")");
+    this->match(")");
 }
 
 // <expression> -> <char-literal>
@@ -52,13 +54,13 @@ void Parser::expression() {
 }
 
 void Parser::literal() {
-    delete this->match([](const Token* token) {
+    this->match([](std::shared_ptr<const Token> token) {
         return token->isCharLiteral;
     }, "char literal");
 }
 
 void Parser::identifier() {
-    delete this->match([](const Token* token) {
+    this->match([](std::shared_ptr<const Token> token) {
         return !token->isCharLiteral;
     }, "identifier");
 }

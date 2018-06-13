@@ -1,5 +1,6 @@
 #include "queue_utils.h"
 #include "../models/token.h"
+#include <memory>
 #include <string>
 #include <queue>
 
@@ -13,8 +14,8 @@ std::queue<char> QueueUtils::queueify(const std::string& str) {
     return q;
 }
 
-std::queue<const Token*> QueueUtils::queueify(const Token* tokens[], int length) {
-    std::queue<const Token*> q;
+std::queue<std::shared_ptr<const Token>> QueueUtils::queueify(std::shared_ptr<const Token> tokens[], int length) {
+    std::queue<std::shared_ptr<const Token>> q;
 
     for (int i = 0; i < length; ++i) {
         q.push(tokens[i]);

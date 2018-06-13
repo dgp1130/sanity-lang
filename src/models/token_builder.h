@@ -2,6 +2,7 @@
 #define SANITY_TOKEN_BUILDER_H
 
 #include "token.h"
+#include <memory>
 #include <string>
 
 /**
@@ -18,7 +19,7 @@ public:
 
     TokenBuilder charLiteral();
 
-    const Token* build();
+    std::shared_ptr<const Token> build();
 };
 
 #endif //SANITY_TOKEN_BUILDER_H

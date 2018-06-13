@@ -1,6 +1,7 @@
 #include "stream.h"
 #include <deque>
 #include <queue>
+#include <memory>
 #include <regex>
 #include <functional>
 #include "../models/token.h"
@@ -100,7 +101,7 @@ Stream* Stream::repeat(const std::regex& matcher, const int limit, const std::fu
     return this;
 }
 
-void Stream::returnToken(const std::function<const Token* (const std::string&)> tokenProducer) {
+void Stream::returnToken(const std::function<std::shared_ptr<const Token> (const std::string&)>& tokenProducer) {
     this->result = tokenProducer(dequeToString(this->buffer));
     this->buffer = std::deque<char>();
 }
@@ -111,8 +112,8 @@ void Stream::returnToken() {
     });
 }
 
-const Token* Stream::extractResult() {
-    const Token* token = this->result;
+std::shared_ptr<const Token> Stream::extractResult() {
+    std::shared_ptr<const Token> token = this->result;
 
     // If no token to return and there is still data to process, then something has gone wrong.
     if (token == nullptr && !this->chars.empty()) {

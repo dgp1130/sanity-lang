@@ -10,27 +10,27 @@
 typedef Exceptions::ParseException ParseException;
 
 TEST(Parser, ParsesEmptyFile) {
-    const Token* tokens[] = {};
-    std::queue<const Token*> input = QueueUtils::queueify(tokens, 0 /* length */);
+    std::shared_ptr<const Token> tokens[] = {};
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 0 /* length */);
 
     ASSERT_NO_THROW(Parser(input).parse());
 }
 
 TEST(Parser, ParsesSingleFunctionCall) {
-    const Token* tokens[] = {
+    std::shared_ptr<const Token> tokens[] = {
         TokenBuilder("test").build(),
         TokenBuilder("(").build(),
         TokenBuilder("a").charLiteral().build(),
         TokenBuilder(")").build(),
         TokenBuilder(";").build(),
     };
-    std::queue<const Token*> input = QueueUtils::queueify(tokens, 5 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 5 /* length */);
 
     ASSERT_NO_THROW(Parser(input).parse());
 }
 
 TEST(Parser, ParsesMultipleFunctionCalls) {
-    const Token* tokens[] = {
+    std::shared_ptr<const Token> tokens[] = {
         TokenBuilder("test1").build(),
         TokenBuilder("(").build(),
         TokenBuilder("a").charLiteral().build(),
@@ -43,73 +43,73 @@ TEST(Parser, ParsesMultipleFunctionCalls) {
         TokenBuilder(")").build(),
         TokenBuilder(";").build(),
     };
-    std::queue<const Token*> input = QueueUtils::queueify(tokens, 10 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 10 /* length */);
 
     ASSERT_NO_THROW(Parser(input).parse());
 }
 
 TEST(Parser, ThrowsParseExceptionOnFunctionCallMissingName) {
-    const Token* tokens[] = {
+    std::shared_ptr<const Token> tokens[] = {
         TokenBuilder("(").build(),
     };
-    std::queue<const Token*> input = QueueUtils::queueify(tokens, 1 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 1 /* length */);
 
     ASSERT_THROW(Parser(input).parse(), ParseException);
 }
 
 TEST(Parser, ThrowsParseExceptionOnFunctionCallMissingOpenParen) {
-    const Token* tokens[] = {
+    std::shared_ptr<const Token> tokens[] = {
         TokenBuilder("test").build(),
         TokenBuilder(";").build(),
     };
-    std::queue<const Token*> input = QueueUtils::queueify(tokens, 2 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 2 /* length */);
 
     ASSERT_THROW(Parser(input).parse(), ParseException);
 }
 
 TEST(Parser, ThrowsParseExceptionOnFunctionCallMissingArgument) {
-    const Token* tokens[] = {
+    std::shared_ptr<const Token> tokens[] = {
         TokenBuilder("test").build(),
         TokenBuilder("(").build(),
         TokenBuilder(")").build(),
     };
-    std::queue<const Token*> input = QueueUtils::queueify(tokens, 3 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 3 /* length */);
 
     ASSERT_THROW(Parser(input).parse(), ParseException);
 }
 
 TEST(Parser, ThrowsParseExceptionOnFunctionCallMissingCloseParen) {
-    const Token* tokens[] = {
+    std::shared_ptr<const Token> tokens[] = {
         TokenBuilder("test").build(),
         TokenBuilder("(").build(),
         TokenBuilder("a").charLiteral().build(),
         TokenBuilder(";").build(),
     };
-    std::queue<const Token*> input = QueueUtils::queueify(tokens, 4 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 4 /* length */);
 
     ASSERT_THROW(Parser(input).parse(), ParseException);
 }
 
 TEST(Parser, ThrowsParseExceptionOnStatementMissingSemicolon) {
-    const Token* tokens[] = {
+    std::shared_ptr<const Token> tokens[] = {
         TokenBuilder("test").build(),
         TokenBuilder("(").build(),
         TokenBuilder("a").charLiteral().build(),
         TokenBuilder(")").build(),
         TokenBuilder("foo").build(),
     };
-    std::queue<const Token*> input = QueueUtils::queueify(tokens, 5 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 5 /* length */);
 
     ASSERT_THROW(Parser(input).parse(), ParseException);
 }
 
 TEST(Parser, ThrowsParseExceptionOnUnexpectedEOF) {
-    const Token* tokens[] = {
+    std::shared_ptr<const Token> tokens[] = {
         TokenBuilder("test").build(),
         TokenBuilder("(").build(),
         // EOF
     };
-    std::queue<const Token*> input = QueueUtils::queueify(tokens, 2 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 2 /* length */);
 
     ASSERT_THROW(Parser(input).parse(), ParseException);
 }

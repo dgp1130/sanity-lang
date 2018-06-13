@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <memory>
 #include "stream.h"
 #include "../utils/queue_utils.h"
 
@@ -20,29 +21,23 @@ protected:
 
 TEST_F(StreamTestFixture, IgnoresCharacters) {
     this->stream->ignore(3)->returnToken();
-    const Token* token = this->stream->extractResult();
+    std::shared_ptr<const Token> token = this->stream->extractResult();
 
     ASSERT_EQ("", token->source);
-
-    delete token;
 }
 
 TEST_F(StreamTestFixture, ConsumesCharacters) {
     this->stream->consume(3)->returnToken();
-    const Token* token = this->stream->extractResult();
+    std::shared_ptr<const Token> token = this->stream->extractResult();
 
     ASSERT_EQ("abc", token->source);
-
-    delete token;
 }
 
 TEST_F(StreamTestFixture, ConsumesWhileCharacterMatchRegex) {
     this->stream->consumeWhile(std::regex("^[a-z]"), 1)->returnToken();
-    const Token* token = this->stream->extractResult();
+    std::shared_ptr<const Token> token = this->stream->extractResult();
 
     ASSERT_EQ("abc", token->source);
-
-    delete token;
 }
 
 TEST_F(StreamTestFixture, MatchInvokesCallbackForMatchingRegex) {
@@ -66,11 +61,9 @@ TEST_F(StreamTestFixture, RepeatInvokesCallbackWhileRegexMatches) {
     this->stream->repeat(std::regex("^[a-z]"), 1, [](Stream* stream) {
         stream->consume();
     })->returnToken();
-    const Token* token = this->stream->extractResult();
+    std::shared_ptr<const Token> token = this->stream->extractResult();
 
     ASSERT_EQ("abc", token->source);
-
-    delete token;
 }
 
 TEST_F(StreamTestFixture, RepeatDoesNotInvokeCallbackIfNoMatch) {
@@ -82,8 +75,8 @@ TEST_F(StreamTestFixture, RepeatDoesNotInvokeCallbackIfNoMatch) {
 }
 
 TEST_F(StreamTestFixture, CallsAfterReturnTokenAreIgnoredUntilNextRun) {
-    std::queue<const Token*> tokens;
-    const Token* token;
+    std::queue<std::shared_ptr<const Token>> tokens;
+    std::shared_ptr<const Token> token;
     do {
         token = this->stream->match(std::regex("^[a-z]"), 1, [](Stream* stream) {
             stream->consumeWhile(std::regex("^[a-z]"), 1)->returnToken();
@@ -95,13 +88,11 @@ TEST_F(StreamTestFixture, CallsAfterReturnTokenAreIgnoredUntilNextRun) {
 
     ASSERT_EQ(2, tokens.size());
 
-    const Token* first = tokens.front();
+    std::shared_ptr<const Token> first = tokens.front();
     ASSERT_EQ("abc", first->source);
-    delete first;
     tokens.pop();
 
-    const Token* second = tokens.front();
+    std::shared_ptr<const Token> second = tokens.front();
     ASSERT_EQ("123", second->source);
-    delete second;
     tokens.pop();
 }

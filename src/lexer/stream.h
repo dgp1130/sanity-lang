@@ -3,6 +3,7 @@
 
 #include <deque>
 #include <queue>
+#include <memory>
 #include <regex>
 #include <functional>
 #include "../models/token.h"
@@ -11,7 +12,7 @@ class Stream {
 private:
     std::deque<char> chars;
     std::deque<char> buffer;
-    const Token* result;
+    std::shared_ptr<const Token> result;
 
 public:
     explicit Stream(std::queue<char>& chars);
@@ -48,7 +49,7 @@ public:
      * extractResult() is called. All other functionality is blocked until the Token is extracted.
      * @see #extractResult()
      */
-    void returnToken(std::function<const Token* (const std::string&)> tokenProducer);
+    void returnToken(const std::function<std::shared_ptr<const Token> (const std::string&)>& tokenProducer);
 
     /**
      * Saves the current state of the buffer and will return a standard Token with no special options of this state when
@@ -62,7 +63,7 @@ public:
      * to continue processing the input.
      * @see #returnToken()
      */
-    const Token* extractResult();
+    std::shared_ptr<const Token> extractResult();
 
 private:
     /**
