@@ -20,7 +20,7 @@ TEST(Parser, ParsesSingleFunctionCall) {
     std::shared_ptr<const Token> tokens[] = {
         TokenBuilder("test").build(),
         TokenBuilder("(").build(),
-        TokenBuilder("a").charLiteral().build(),
+        TokenBuilder("a").setCharLiteral(true).build(),
         TokenBuilder(")").build(),
         TokenBuilder(";").build(),
     };
@@ -33,13 +33,13 @@ TEST(Parser, ParsesMultipleFunctionCalls) {
     std::shared_ptr<const Token> tokens[] = {
         TokenBuilder("test1").build(),
         TokenBuilder("(").build(),
-        TokenBuilder("a").charLiteral().build(),
+        TokenBuilder("a").setCharLiteral(true).build(),
         TokenBuilder(")").build(),
         TokenBuilder(";").build(),
 
         TokenBuilder("test2").build(),
         TokenBuilder("(").build(),
-        TokenBuilder("b").charLiteral().build(),
+        TokenBuilder("b").setCharLiteral(true).build(),
         TokenBuilder(")").build(),
         TokenBuilder(";").build(),
     };
@@ -82,7 +82,7 @@ TEST(Parser, ThrowsParseExceptionOnFunctionCallMissingCloseParen) {
     std::shared_ptr<const Token> tokens[] = {
         TokenBuilder("test").build(),
         TokenBuilder("(").build(),
-        TokenBuilder("a").charLiteral().build(),
+        TokenBuilder("a").setCharLiteral(true).build(),
         TokenBuilder(";").build(),
     };
     std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 4 /* length */);
@@ -94,7 +94,7 @@ TEST(Parser, ThrowsParseExceptionOnStatementMissingSemicolon) {
     std::shared_ptr<const Token> tokens[] = {
         TokenBuilder("test").build(),
         TokenBuilder("(").build(),
-        TokenBuilder("a").charLiteral().build(),
+        TokenBuilder("a").setCharLiteral(true).build(),
         TokenBuilder(")").build(),
         TokenBuilder("foo").build(),
     };

@@ -9,6 +9,7 @@
 #include "../models/token_builder.h"
 
 typedef Exceptions::IllegalStateException IllegalStateException;
+typedef Exceptions::SyntaxException SyntaxException;
 
 std::string dequeToString(std::deque<char>& chars, const unsigned long limit) {
     // Take the limit number of characters from the deque and put them into a string.
@@ -44,12 +45,33 @@ Stream::Stream(std::queue<char>& chars) {
     this->result = nullptr;
 }
 
-Stream* Stream::ignore(const int numChars) {
+void Stream::advanceChars(const int numChars, const bool updateStartColumn) {
+    for (int i = 0; i < numChars; ++i) {
+        char c = this->chars.front();
+        this->chars.pop_front();
+
+        // Update line numbers
+        if (c == '\n') {
+            this->line++;
+            this->currentCol = 1;
+
+            // If no characters have been parsed, then we haven't started yet, update start positions.
+            if (updateStartColumn && this->buffer.empty()) {
+                this->startCol = 1;
+            }
+        } else {
+            this->currentCol++;
+
+            // If no characters have been parsed, then we haven't started yet, update start positions.
+            if (updateStartColumn && this->buffer.empty()) this->startCol++;
+        }
+    }
+}
+
+Stream* Stream::ignore(const int numChars, const bool updateStartColumn) {
     if (!this->active()) return this;
 
-    for (int i = 0; i < numChars; ++i) {
-        this->chars.pop_front();
-    }
+    this->advanceChars(numChars, updateStartColumn);
 
     return this;
 }
@@ -59,7 +81,7 @@ Stream* Stream::consume(const int numChars) {
 
     for (int i = 0; i < numChars; ++i) {
         buffer.push_back(this->chars.front());
-        this->chars.pop_front();
+        this->advanceChars(1 /* numChars */, true /* updateStartColumn */);
     }
 
     return this;
@@ -75,7 +97,7 @@ Stream* Stream::consumeWhile(const std::regex& matcher, const int limit) {
     return this;
 }
 
-Stream* Stream::match(const std::regex& matcher, const int limit, const std::function<void (Stream*)> callback) {
+Stream* Stream::match(const std::regex& matcher, const int limit, const std::function<void (Stream* stream)> callback) {
     if (!this->active()) return this;
 
     const std::string str = dequeToString(this->chars, (unsigned long) limit);
@@ -101,15 +123,25 @@ Stream* Stream::repeat(const std::regex& matcher, const int limit, const std::fu
     return this;
 }
 
-void Stream::returnToken(const std::function<std::shared_ptr<const Token> (const std::string&)>& tokenProducer) {
-    this->result = tokenProducer(dequeToString(this->buffer));
+void Stream::returnToken(const std::function<TokenBuilder (const std::string& source)>& tokenProducer) {
+    this->result = tokenProducer(dequeToString(this->buffer))
+        .setLine(this->line)
+        .setStartCol(this->startCol)
+        .setEndCol(this->currentCol)
+    .build();
     this->buffer = std::deque<char>();
+
+    this->startCol = this->currentCol;
 }
 
 void Stream::returnToken() {
     this->returnToken([](const std::string& source) {
-        return TokenBuilder(source).build();
+        return TokenBuilder(source);
     });
+}
+
+void Stream::throwException(const std::string& message) {
+    throw SyntaxException(message, this->line, this->startCol, this->currentCol);
 }
 
 std::shared_ptr<const Token> Stream::extractResult() {

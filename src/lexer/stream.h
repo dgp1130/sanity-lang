@@ -7,20 +7,28 @@
 #include <regex>
 #include <functional>
 #include "../models/token.h"
+#include "../models/token_builder.h"
 
 class Stream {
 private:
     std::deque<char> chars;
     std::deque<char> buffer;
     std::shared_ptr<const Token> result;
+    int line = 1;
+    int startCol = 1;
+    int currentCol = 1;
+
+    void advanceChars(int numChars = 1, bool updateStartColumn = false);
 
 public:
     explicit Stream(std::queue<char>& chars);
 
     /**
-     * Ignores the next amount of characters in the stream.
+     * Ignores the next amount of characters in the stream. If updateStartColumn is true, then the Stream will assume
+     * that the values ignored are not associated with any Token, and the line numbers will be updated to skip over
+     * these characters.
      */
-    Stream* ignore(int numChars = 1);
+    Stream* ignore(int numChars = 1, bool updateStartColumn = false);
 
     /**
      * Consumes the next amount of characters by including them in the next Token.
@@ -36,7 +44,7 @@ public:
      * If the current state of the stream matches the given regex up to the limit number of characters, then the
      * callback is invoked.
      */
-    Stream* match(const std::regex& matcher, int limit, std::function<void (Stream*)> callback);
+    Stream* match(const std::regex& matcher, int limit, std::function<void (Stream* stream)> callback);
 
     /**
      * As long as the current state of the stream matches the given regex up to the limit number of characters, then
@@ -49,7 +57,7 @@ public:
      * extractResult() is called. All other functionality is blocked until the Token is extracted.
      * @see #extractResult()
      */
-    void returnToken(const std::function<std::shared_ptr<const Token> (const std::string&)>& tokenProducer);
+    void returnToken(const std::function<TokenBuilder (const std::string& source)>& tokenProducer);
 
     /**
      * Saves the current state of the buffer and will return a standard Token with no special options of this state when
@@ -57,6 +65,12 @@ public:
      * @see #extractResult()
      */
     void returnToken();
+
+    /**
+     * Throw an exception with the given message. Automatically attaches the current line and col numbers to it.
+     * @throws SyntaxException
+     */
+    void throwException(const std::string& message);
 
     /**
      * Takes the token previously saved by returnToken() and returns it while resetting the current state of the stream

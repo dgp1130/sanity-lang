@@ -47,8 +47,12 @@ namespace Exceptions {
      */
     struct SyntaxException : public std::exception {
         const std::string message;
+        const int line;
+        const int startCol;
+        const int endCol;
 
-        explicit SyntaxException(const std::string& message) : message(message) { }
+        SyntaxException(const std::string& message, const int line, const int startCol, const int endCol)
+            : message(message), line(line), startCol(startCol), endCol(endCol) { }
 
         const char* what() const noexcept override;
     };

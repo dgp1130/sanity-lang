@@ -16,7 +16,7 @@ std::queue<std::shared_ptr<const Token>> Lexer::tokenize(std::queue<char>& chars
     std::shared_ptr<const Token> token;
     do {
         token = stream->repeat(std::regex("^[ \t\n\r]"), 1, [](Stream* stream) {
-            stream->ignore();
+            stream->ignore(1 /* space */, true /* updateStartLineNumbers */);
         })->match(std::regex("^[a-zA-Z_]"), 1, [](Stream* stream) {
             stream->consumeWhile(std::regex("^[a-zA-Z0-9_]"), 1)->returnToken();
         })->match(std::regex("^[0-9]"), 1, [](Stream* stream) {
@@ -24,10 +24,10 @@ std::queue<std::shared_ptr<const Token>> Lexer::tokenize(std::queue<char>& chars
         })->match(std::regex("^\'"), 1, [](Stream* stream) {
             stream->ignore(/* open quote */)->consume(/* char */)
                 ->match(std::regex("^[^\']"), 1, [](Stream* stream) {
-                    throw SyntaxException("Expected character to end with a close quote.");
+                    stream->throwException("Expected character to end with a close quote.");
                 })->match(std::regex("^\'"), 1, [](Stream* stream) {
                     stream->ignore(/* close quote */)->returnToken([](const std::string& source) {
-                        return TokenBuilder(source).charLiteral().build();
+                        return TokenBuilder(source).setCharLiteral(true);
                     });
                 })
             ;

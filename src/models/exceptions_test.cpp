@@ -22,6 +22,6 @@ TEST(Exceptions, ParseExceptionExists) {
 }
 
 TEST(Exceptions, SyntaxExceptionExists) {
-    SyntaxException("Syntax error");
+    SyntaxException("Syntax error", 1 /* line */, 2 /* startCol */, 3 /* endCol */);
     SUCCEED(); // If this compiles and executes, then we're good.
 }

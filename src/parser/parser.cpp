@@ -1,5 +1,6 @@
 #include <functional>
 #include <memory>
+#include <sstream>
 #include "parser.h"
 #include "../models/token.h"
 #include "../models/exceptions.h"
@@ -21,7 +22,11 @@ std::shared_ptr<const Token> Parser::match(const std::function<bool (std::shared
         this->tokens.pop();
         return token;
     } else {
-        throw ParseException("Expected \"" + expected + "\", but got \"" + token->source + "\"");
+        std::ostringstream ss;
+        ss << "Expected \"" << expected << "\", but got \"" << token->source << "\" (line " << token->line
+           << ", col " << token->startCol << " -> " << token->endCol << ")";
+
+        throw ParseException(ss.str());
     }
 };
 

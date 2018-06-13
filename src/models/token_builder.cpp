@@ -5,11 +5,27 @@
 
 TokenBuilder::TokenBuilder(const std::string& source) : source(source) {}
 
-TokenBuilder TokenBuilder::charLiteral() {
-    this->isCharLiteral = true;
+TokenBuilder TokenBuilder::setLine(const int line) {
+    this->line = line;
+    return *this;
+}
+
+TokenBuilder TokenBuilder::setStartCol(const int col) {
+    this->startCol = col;
+    return *this;
+}
+
+TokenBuilder TokenBuilder::setEndCol(const int col) {
+    this->endCol = col;
+    return *this;
+}
+
+TokenBuilder TokenBuilder::setCharLiteral(bool isCharLiteral){
+    this->isCharLiteral = isCharLiteral;
     return *this;
 }
 
 std::shared_ptr<const Token> TokenBuilder::build() {
-    return std::make_shared<const Token>(Token(this->source, this->isCharLiteral));
+    return std::make_shared<const Token>(Token(this->source, this->line, this->startCol, this->endCol,
+        this->isCharLiteral));
 }

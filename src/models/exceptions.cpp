@@ -1,4 +1,5 @@
 #include <cstring>
+#include <sstream>
 #include "exceptions.h"
 
 typedef Exceptions::FileNotFoundException FileNotFoundException;
@@ -25,5 +26,12 @@ const char* ParseException::what() const noexcept {
 }
 
 const char* SyntaxException::what() const noexcept {
-    return this->message.c_str();
+    std::ostringstream ss;
+    ss << "Syntax exception (line " << this->line << ", col " << this->startCol << " -> " << this->endCol << "): "
+        << this->message;
+    const std::string message = ss.str();
+    auto cstring = new char[message.size()];
+    strcpy(cstring, message.c_str());
+
+    return cstring;
 }

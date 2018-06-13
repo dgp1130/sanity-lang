@@ -35,7 +35,7 @@ int main(const int argc, const char* argv[]) {
     try {
         tokens = Lexer::tokenize(chars);
     } catch (const SyntaxException& ex) {
-        std::cerr << "SyntaxException: " << ex.what() << std::endl;
+        std::cerr << ex.what() << std::endl;
         return 1;
     }
 

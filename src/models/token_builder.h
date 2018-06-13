@@ -12,12 +12,21 @@
 class TokenBuilder {
 private:
     const std::string source;
+    int line = -1;
+    int startCol = -1;
+    int endCol = -1;
     bool isCharLiteral = false;
 
 public:
     explicit TokenBuilder(const std::string& source);
 
-    TokenBuilder charLiteral();
+    TokenBuilder setLine(int line);
+
+    TokenBuilder setStartCol(int col);
+
+    TokenBuilder setEndCol(int col);
+
+    TokenBuilder setCharLiteral(bool isCharLiteral);
 
     std::shared_ptr<const Token> build();
 };
