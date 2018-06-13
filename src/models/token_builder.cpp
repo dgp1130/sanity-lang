@@ -1,5 +1,7 @@
 #include "token_builder.h"
 
+#include "token.h"
+
 TokenBuilder::TokenBuilder(const std::string& source) : source(source) {}
 
 TokenBuilder TokenBuilder::charLiteral() {

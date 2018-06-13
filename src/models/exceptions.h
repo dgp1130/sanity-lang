@@ -32,6 +32,17 @@ namespace Exceptions {
     };
 
     /**
+     * Exception to throw on a parsing error.
+     */
+    struct ParseException : public std::exception {
+        const std::string message;
+
+        explicit ParseException(const std::string& message): message(message) { }
+
+        const char* what() const noexcept override;
+    };
+
+    /**
      * Exception to throw on a syntax error encountered during lexical analysis.
      */
     struct SyntaxException : public std::exception {

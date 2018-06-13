@@ -2,8 +2,26 @@
 #include "exceptions.h"
 
 typedef Exceptions::FileNotFoundException FileNotFoundException;
+typedef Exceptions::IllegalStateException IllegalStateException;
+typedef Exceptions::ParseException ParseException;
+typedef Exceptions::SyntaxException SyntaxException;
 
 TEST(Exceptions, FileNotFoundExceptionExists) {
     FileNotFoundException ex("file.txt");
+    SUCCEED(); // If this compiles and executes, then we're good.
+}
+
+TEST(Exceptions, IllegalStateExceptionExists) {
+    IllegalStateException("Bad state");
+    SUCCEED(); // If this compiles and executes, then we're good.
+}
+
+TEST(Exceptions, ParseExceptionExists) {
+    ParseException("Parsing error");
+    SUCCEED(); // If this compiles and executes, then we're good.
+}
+
+TEST(Exceptions, SyntaxExceptionExists) {
+    SyntaxException("Syntax error");
     SUCCEED(); // If this compiles and executes, then we're good.
 }

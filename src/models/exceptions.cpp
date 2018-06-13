@@ -3,6 +3,7 @@
 
 typedef Exceptions::FileNotFoundException FileNotFoundException;
 typedef Exceptions::IllegalStateException IllegalStateException;
+typedef Exceptions::ParseException ParseException;
 typedef Exceptions::SyntaxException SyntaxException;
 
 const char* FileNotFoundException::what() const noexcept {
@@ -17,6 +18,10 @@ const char* FileNotFoundException::what() const noexcept {
 
 const char* IllegalStateException::what() const noexcept {
     return this->reason.c_str();
+}
+
+const char* ParseException::what() const noexcept {
+    return this->message.c_str();
 }
 
 const char* SyntaxException::what() const noexcept {

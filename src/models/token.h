@@ -12,7 +12,7 @@ public:
      * Construct a Token with the given values. This API kind of sucks, so use TokenBuilder instead.
      * @see TokenBuilder
      */
-    explicit Token(const std::string& source, bool isCharLiteral);
+    Token(const std::string& source, bool isCharLiteral);
 
     friend std::ostream& operator<<(std::ostream&, const Token&);
 };
