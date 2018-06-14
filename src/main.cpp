@@ -3,6 +3,7 @@
 #include <queue>
 #include "utils/file_utils.h"
 #include "lexer/lexer.h"
+#include "models/ast.h"
 #include "models/exceptions.h"
 #include "parser/parser.h"
 
@@ -40,12 +41,16 @@ int main(const int argc, const char* argv[]) {
     }
 
     // Parse the tokens.
+    std::shared_ptr<const AST::Block> block;
     try {
-        Parser(tokens).parse();
+        block = Parser::parse(tokens);
     } catch (const ParseException& ex) {
         std::cerr << "ParseException: " << ex.what() << std::endl;
         return 1;
     }
+
+    // Print the abstract syntax tree to stdout.
+    block->print(std::cout);
 
     // Completed successfully.
     return 0;

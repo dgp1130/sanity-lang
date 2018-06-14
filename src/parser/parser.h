@@ -3,36 +3,36 @@
 
 #include <queue>
 #include <functional>
+#include "../models/ast.h"
 #include "../models/token.h"
 
 /**
- * Class for parsing the Sanity language. Uses a recursive descent parsing design.
+ * Class for parsing the Sanity language. Uses a recursive descent parsing design. The class is only used via the static
+ * parse() function, however the class is necessary to maintain state so that the match() methods are usuable.
  */
 class Parser {
 private:
     std::queue<std::shared_ptr<const Token>> tokens;
 
+    explicit Parser(std::queue<std::shared_ptr<const Token>>& tokens);
+
     std::shared_ptr<const Token> match(const std::function<bool (std::shared_ptr<const Token>)>& matcher,
         const std::string& errMsg);
     std::shared_ptr<const Token> match(const std::string& expected);
 
-    void file();
-    void statement();
-    void functionCall();
-    void expression();
-    void literal();
-    void identifier();
+    std::shared_ptr<const AST::Block> file();
+    std::shared_ptr<const AST::Block> block();
+    std::shared_ptr<const AST::Statement> statement();
+    std::shared_ptr<const AST::Expression> expression();
+    std::shared_ptr<const AST::FunctionCall> functionCall();
+    std::shared_ptr<const AST::CharLiteral> charLiteral();
+    std::shared_ptr<const AST::Identifier> identifier();
 
 public:
     /**
-     * Construct a parser which will parse the provided tokens and consume the queue.
-     */
-    explicit Parser(std::queue<std::shared_ptr<const Token>>& tokens);
-
-    /**
      * Parse the tokens provided.
      */
-    void parse();
+    static std::shared_ptr<const AST::Block> parse(std::queue<std::shared_ptr<const Token>>& tokens);
 };
 
 #endif //SANITY_PARSER_H

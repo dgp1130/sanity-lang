@@ -52,6 +52,12 @@ add_subdirectory(
 include_directories("${gtest_SOURCE_DIR}/include")
 
 # Compile each Sanity source file on its own as a library.
+add_library(ast src/models/ast.cpp src/models/ast.h)
+target_link_libraries(ast token)
+
+add_library(ast_test src/models/ast_test.cpp)
+target_link_libraries(ast_test ast token token_builder)
+
 add_library(exceptions src/models/exceptions.cpp src/models/exceptions.h)
 
 add_library(exceptions_test src/models/exceptions_test.cpp)
@@ -70,10 +76,10 @@ add_library(lexer_test src/lexer/lexer_test.cpp)
 target_link_libraries(lexer_test lexer queue_utils)
 
 add_library(parser src/parser/parser.cpp src/parser/parser.h)
-target_link_libraries(parser exceptions token)
+target_link_libraries(parser ast exceptions token)
 
 add_library(parser_test src/parser/parser.cpp)
-target_link_libraries(parser_test exceptions parser token token_builder queue_utils)
+target_link_libraries(parser_test ast exceptions parser token token_builder queue_utils)
 
 add_library(stream src/lexer/stream.cpp src/lexer/stream.h)
 target_link_libraries(stream token)
@@ -97,7 +103,7 @@ target_link_libraries(queue_utils_test queue_utils)
 
 # Build the Sanity executable and link it against its dependencies.
 add_executable(Sanity src/main.cpp)
-target_link_libraries(Sanity exceptions file_utils lexer parser)
+target_link_libraries(Sanity ast exceptions file_utils lexer parser)
 
 # Build the Sanity test executable with all test files and link it against its dependencies.
 add_executable(SanityTest src/test_runner.cpp)
@@ -105,6 +111,7 @@ target_link_libraries(
     SanityTest
     gtest
     gtest_main
+    ast_test
     exceptions_test
     file_utils_test
     lexer_test

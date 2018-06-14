@@ -2,6 +2,7 @@
 
 #include "lexer/lexer_test.cpp"
 #include "lexer/stream_test.cpp"
+#include "models/ast_test.cpp"
 #include "models/exceptions_test.cpp"
 #include "models/token_test.cpp"
 #include "parser/parser_test.cpp"
