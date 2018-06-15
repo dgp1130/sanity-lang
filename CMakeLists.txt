@@ -8,9 +8,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# See https://www.boost.org/doc/libs/1_67_0/more/getting_started/unix-variants.html to install
-include_directories(/usr/local/boost_1_67_0)
-
 # GoogleTest build system hacked from https://github.com/google/googletest/blob/master/googletest/README.md
 
 # Download and unpack googletest at configure time by invoking CMake on the other configuration file.
