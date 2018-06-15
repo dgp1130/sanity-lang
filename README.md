@@ -19,6 +19,12 @@ allow it to be run on just about any machine without requiring me to generate
 assembly for every assembler on the market and is the standard tool for this kind
 of project.
 
+## Getting Started
+
+Sanity is still in early development and not at a releasable state. Mainly as notes
+for myself, there is some documentation on building Sanity from source and running
+it [here](doc/dev_setup.md).
+
 ## Philosophy
 
 Sanity is a collage of random ideas I had about ways to improve modern programming

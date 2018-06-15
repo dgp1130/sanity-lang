@@ -48,6 +48,14 @@ add_subdirectory(
 # Include the header files to link against.
 include_directories("${gtest_SOURCE_DIR}/include")
 
+# LLVM Configuration.
+find_package(LLVM REQUIRED CONFIG)
+include_directories(${LLVM_INCLUDE_DIRS})
+add_definitions(${LLVM_DEFINITIONS})
+
+# Find the libraries that correspond to the LLVM components that we wish to use.
+llvm_map_components_to_libnames(llvm_libs support core irreader)
+
 # Compile each Sanity source file on its own as a library.
 add_library(ast src/models/ast.cpp src/models/ast.h)
 target_link_libraries(ast token)
@@ -100,7 +108,7 @@ target_link_libraries(queue_utils_test queue_utils)
 
 # Build the Sanity executable and link it against its dependencies.
 add_executable(Sanity src/main.cpp)
-target_link_libraries(Sanity ast exceptions file_utils lexer parser)
+target_link_libraries(Sanity ${llvm_libs} ast exceptions file_utils lexer parser)
 
 # Build the Sanity test executable with all test files and link it against its dependencies.
 add_executable(SanityTest src/test_runner.cpp)
@@ -108,6 +116,7 @@ target_link_libraries(
     SanityTest
     gtest
     gtest_main
+    ${llvm_libs}
     ast_test
     exceptions_test
     file_utils_test
@@ -117,3 +126,23 @@ target_link_libraries(
     token_test
     queue_utils_test
 )
+
+# LLVM is (typically) built with no C++ RTTI. We need to match that;
+# otherwise, we'll get linker errors about missing RTTI data.
+set_target_properties(Sanity PROPERTIES
+    COMPILE_FLAGS "-fno-rtti"
+)
+set_target_properties(SanityTest PROPERTIES
+    COMPILE_FLAGS "-fno-rtti"
+)
+
+# Get proper shared-library behavior (where symbols are not necessarily
+# resolved when the shared library is linked) on OS X.
+if(APPLE)
+    set_target_properties(Sanity PROPERTIES
+        LINK_FLAGS "-undefined dynamic_lookup"
+    )
+    set_target_properties(SanityTest PROPERTIES
+        LINK_FLAGS "-undefined dynamic_lookup"
+    )
+endif(APPLE)
