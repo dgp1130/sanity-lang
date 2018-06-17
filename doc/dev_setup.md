@@ -34,6 +34,23 @@ it can be easily run with:
 $ build/bin/Sanity hello.sane
 ```
 
+Currently, running Sanity simply outputs the LLVM IR which can execute it. The easiest way to run this is to put it into
+the LLVM interpreter.
+
+```bash
+$ cmake --build . --target Sanity && build/bin/Sanity hello.sane | lli
+```
+
+It is also possible to run Sanity by putting its output into the LLVM compiler to convert it to assembly for the dev
+architecture. This can then use `g++` to compile it into a binary and then execute it.
+
+```bash
+$ cmake --build . --target Sanity && build/bin/Sanity hello.sane | llc | g++ -x assembler - -o build/bin/hello && build/bin/hello
+```
+
+This should use `ld` to link rather than mixing toolchains with `g++`, but I was having issues with that whereas `g++`
+was not. This should be good enough for now.
+
 ## Test Sanity
 
 Tests can be built using the following CMake command.
