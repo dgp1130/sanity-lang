@@ -353,6 +353,8 @@ values and types can be easily stored with any additional complexity.
 
 #### First-Class Generics
 
+#### Type Subtraction
+
 #### Null and Exceptions
 
 `null` has been called the "billion-dollar mistake", and while I don't entirely agree with that, the
@@ -486,6 +488,8 @@ is impractical.
 ### Compile-Time Execution
 
 ### Elm-style Streams
+
+### Import/Export and Module System
 
 ### Testing Support
 
