@@ -7,6 +7,7 @@
 #include "../models/token.h"
 #include "../models/token_builder.h"
 #include "../utils/queue_utils.h"
+#include "llvm/Support/raw_ostream.h"
 
 typedef Exceptions::ParseException ParseException;
 
@@ -14,9 +15,9 @@ TEST(Parser, ParsesEmptyFile) {
     std::shared_ptr<const Token> tokens[] = {};
     std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 0 /* length */);
 
-    std::shared_ptr<const AST::Block> block = Parser::parse(input);
+    std::shared_ptr<const AST::File> file = Parser::parse(input);
 
-    ASSERT_TRUE(block->statements.empty());
+    ASSERT_TRUE(file->statements.empty());
 }
 
 TEST(Parser, ParsesSingleFunctionCall) {
@@ -29,10 +30,11 @@ TEST(Parser, ParsesSingleFunctionCall) {
     };
     std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 5 /* length */);
 
-    std::shared_ptr<const AST::Block> block = Parser::parse(input);
+    std::shared_ptr<const AST::File> file = Parser::parse(input);
 
-    std::stringstream ss;
-    block->print(ss);
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    file->print(ss);
     ASSERT_EQ("test(\'a\');\n", ss.str());
 }
 
@@ -43,10 +45,11 @@ TEST(Parser, ParsesSingleCharLiteralStatement) {
     };
     std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 2 /* length */);
 
-    std::shared_ptr<const AST::Block> block = Parser::parse(input);
+    std::shared_ptr<const AST::File> file = Parser::parse(input);
 
-    std::stringstream ss;
-    block->print(ss);
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    file->print(ss);
     ASSERT_EQ("\'a\';\n", ss.str());
 }
 
@@ -63,10 +66,11 @@ TEST(Parser, ParsesMultipleStatements) {
     };
     std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 7 /* length */);
 
-    std::shared_ptr<const AST::Block> block = Parser::parse(input);
+    std::shared_ptr<const AST::File> file = Parser::parse(input);
 
-    std::stringstream ss;
-    block->print(ss);
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    file->print(ss);
     ASSERT_EQ("test1(\'a\');\n\'b\';\n", ss.str());
 }
 

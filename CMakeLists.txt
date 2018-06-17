@@ -58,7 +58,7 @@ llvm_map_components_to_libnames(llvm_libs support core irreader)
 
 # Compile each Sanity source file on its own as a library.
 add_library(ast src/models/ast.cpp src/models/ast.h)
-target_link_libraries(ast token)
+target_link_libraries(ast generator token)
 
 add_library(ast_test src/models/ast_test.cpp)
 target_link_libraries(ast_test ast token token_builder)
@@ -74,6 +74,16 @@ target_link_libraries(file_utils exceptions)
 add_library(file_utils_test src/utils/file_utils_test.cpp)
 target_link_libraries(file_utils_test file_utils)
 
+add_library(generator src/generator/generator.cpp src/generator/generator.h)
+target_link_libraries(generator ${llvm_libs} ast globals)
+
+add_library(generator_test src/generator/generator_test.cpp)
+target_link_libraries(generator_test generator)
+
+add_library(globals src/models/globals.h)
+target_link_libraries(globals ${llvm_libs})
+set_target_properties(globals PROPERTIES LINKER_LANGUAGE CXX)
+
 add_library(lexer src/lexer/lexer.cpp src/lexer/lexer.h)
 target_link_libraries(lexer exceptions stream token token_builder)
 
@@ -81,7 +91,7 @@ add_library(lexer_test src/lexer/lexer_test.cpp)
 target_link_libraries(lexer_test lexer queue_utils)
 
 add_library(parser src/parser/parser.cpp src/parser/parser.h)
-target_link_libraries(parser ast exceptions token)
+target_link_libraries(parser ${llvm_libs} ast exceptions token)
 
 add_library(parser_test src/parser/parser.cpp)
 target_link_libraries(parser_test ast exceptions parser token token_builder queue_utils)
@@ -108,7 +118,7 @@ target_link_libraries(queue_utils_test queue_utils)
 
 # Build the Sanity executable and link it against its dependencies.
 add_executable(Sanity src/main.cpp)
-target_link_libraries(Sanity ${llvm_libs} ast exceptions file_utils lexer parser)
+target_link_libraries(Sanity ${llvm_libs} ast exceptions file_utils generator globals lexer parser)
 
 # Build the Sanity test executable with all test files and link it against its dependencies.
 add_executable(SanityTest src/test_runner.cpp)
@@ -120,6 +130,8 @@ target_link_libraries(
     ast_test
     exceptions_test
     file_utils_test
+    generator_test
+    globals
     lexer_test
     parser_test
     stream_test

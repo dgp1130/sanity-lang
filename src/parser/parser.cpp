@@ -5,6 +5,8 @@
 #include "../models/ast.h"
 #include "../models/token.h"
 #include "../models/exceptions.h"
+#include "../models/globals.h"
+#include "llvm/IR/Type.h"
 
 typedef Exceptions::ParseException ParseException;
 
@@ -35,17 +37,33 @@ std::shared_ptr<const Token> Parser::match(const std::string& expected) {
     return this->match([&expected](std::shared_ptr<const Token> token) { return token->source == expected; }, expected);
 };
 
-// <file> => <block>
-std::shared_ptr<const AST::Block> Parser::file() {
-    return this->block();
+// <file> => <externDecl> <block> | <statement> <block> | ø
+std::shared_ptr<const AST::File> Parser::file() {
+    std::vector<std::shared_ptr<const AST::FunctionPrototype>> externDecls;
+    std::vector<std::shared_ptr<const AST::Statement>> statements;
+
+    while (!this->tokens.empty()) {
+        if (this->tokens.front()->source == "extern") {
+            externDecls.push_back(this->externDecl());
+        } else {
+            statements.push_back(this->statement());
+        }
+    }
+
+    return std::make_shared<const AST::File>(AST::File(externDecls, statements));
 }
 
-// <block> -> <statement> <block> | ø
-std::shared_ptr<const AST::Block> Parser::block() {
-    std::vector<std::shared_ptr<const AST::Statement>> statements;
-    while (!this->tokens.empty()) statements.push_back(this->statement());
+// <externDecl> -> extern <name> ;
+std::shared_ptr<const AST::FunctionPrototype> Parser::externDecl() {
+    this->match("extern");
+    std::shared_ptr<const Token> name = this->match([](std::shared_ptr<const Token> token) {
+        return !token->isCharLiteral;
+    }, "extern");
+    this->match(";");
 
-    return std::make_shared<const AST::Block>(AST::Block(statements));
+    // Assume extern is an (i32) -> i32 function like putchar().
+    return std::make_shared<const AST::FunctionPrototype>(AST::FunctionPrototype(name->source,
+        std::vector<llvm::Type*>({ llvm::Type::getInt32Ty(*context) })));
 }
 
 // <statement> -> <expression> ;
@@ -66,9 +84,11 @@ std::shared_ptr<const AST::Expression> Parser::expression() {
     }
 }
 
-// <function-call> -> <identifier> ( <expression> )
+// <function-call> -> <name> ( <expression> )
 std::shared_ptr<const AST::FunctionCall> Parser::functionCall() {
-    std::shared_ptr<const AST::Identifier> callee = this->identifier();
+    std::shared_ptr<const Token> callee = this->match([](std::shared_ptr<const Token> token) {
+        return !token->isCharLiteral;
+    }, "function name");;
     this->match("(");
     std::shared_ptr<const AST::Expression> argument = this->expression();
     this->match(")");
@@ -84,14 +104,6 @@ std::shared_ptr<const AST::CharLiteral> Parser::charLiteral() {
     return std::make_shared<AST::CharLiteral>(AST::CharLiteral(literal));
 }
 
-std::shared_ptr<const AST::Identifier> Parser::identifier() {
-    const std::shared_ptr<const Token> name = this->match([](std::shared_ptr<const Token> token) {
-        return !token->isCharLiteral;
-    }, "identifier");
-
-    return std::make_shared<AST::Identifier>(AST::Identifier(name));
-}
-
-std::shared_ptr<const AST::Block> Parser::parse(std::queue<std::shared_ptr<const Token>>& tokens) {
+std::shared_ptr<const AST::File> Parser::parse(std::queue<std::shared_ptr<const Token>>& tokens) {
     return Parser(tokens).file();
 }

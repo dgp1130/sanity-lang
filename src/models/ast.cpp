@@ -1,43 +1,76 @@
-#include <iostream>
 #include <vector>
 #include "ast.h"
 #include "token.h"
+#include "../generator/generator.h"
+#include "llvm/Support/raw_ostream.h"
+
+AST::FunctionPrototype::FunctionPrototype(const std::string& name, const std::vector<llvm::Type*> parameters)
+        : name(name), parameters(parameters) { }
+
+llvm::Function* AST::FunctionPrototype::generate(Generator& generator) const {
+    generator.generate(*this);
+}
+
+void AST::FunctionPrototype::print(llvm::raw_ostream& stream) const {
+    stream << "extern " << this->name << "(";
+    if (!this->parameters.empty()) this->parameters[0]->print(stream);
+    for (int i = 1; i < this->parameters.size(); ++i) {
+        stream << ", ";
+        this->parameters[i]->print(stream);
+    }
+    stream << ");";
+}
 
 AST::Statement::Statement(std::shared_ptr<const AST::Expression> expr) : expr(std::move(expr)) { }
 
-void AST::Statement::print(std::ostream& stream) const {
+llvm::Value* AST::Statement::generate(Generator& generator) const {
+    return generator.generate(*this);
+}
+
+void AST::Statement::print(llvm::raw_ostream& stream) const {
     this->expr->print(stream);
     stream << ";";
 }
 
-AST::Block::Block(std::vector<std::shared_ptr<const AST::Statement>> statements) : statements(std::move(statements)) { }
+AST::File::File(std::vector<std::shared_ptr<const AST::FunctionPrototype>> funcDeclarations,
+        std::vector<std::shared_ptr<const AST::Statement>> statements)
+    : funcDeclarations(std::move(funcDeclarations)), statements(std::move(statements)) { }
 
-void AST::Block::print(std::ostream& stream) const {
+llvm::Function* AST::File::generate(Generator& generator) const {
+    return generator.generate(*this);
+}
+
+void AST::File::print(llvm::raw_ostream& stream) const {
+    for (const auto& funcDeclaration : this->funcDeclarations) {
+        funcDeclaration->print(stream);
+        stream << "\n";
+    }
+
     for (const auto& stmt : this->statements) {
         stmt->print(stream);
-        stream << std::endl;
+        stream << "\n";
     }
 }
 
-AST::Identifier::Identifier(const std::shared_ptr<const Token> name) : name(name->source) { }
+AST::CharLiteral::CharLiteral(std::shared_ptr<const Token> value) : value(value->source[0]) { }
 
-void AST::Identifier::print(std::ostream& stream) const {
-    stream << this->name;
+llvm::Value* AST::CharLiteral::generate(Generator& generator) const {
+    return generator.generate(*this);
 }
 
-AST::CharLiteral::CharLiteral(const std::shared_ptr<const Token> value) : value(value->source[0]) { }
-
-void AST::CharLiteral::print(std::ostream& stream) const {
+void AST::CharLiteral::print(llvm::raw_ostream& stream) const {
     stream << "\'" << this->value << "\'";
 }
 
-AST::FunctionCall::FunctionCall(std::shared_ptr<const AST::Identifier> callee,
-        std::shared_ptr<const AST::Expression> argument)
-    : callee(std::move(callee)), argument(std::move(argument)) { }
+AST::FunctionCall::FunctionCall(std::shared_ptr<const Token> callee, std::shared_ptr<const AST::Expression> argument)
+    : callee(callee->source), argument(std::move(argument)) { }
 
-void AST::FunctionCall::print(std::ostream& stream) const {
-    this->callee->print(stream);
-    stream << "(";
+llvm::Value* AST::FunctionCall::generate(Generator& generator) const {
+    return generator.generate(*this);
+}
+
+void AST::FunctionCall::print(llvm::raw_ostream& stream) const {
+    stream << this->callee << "(";
     this->argument->print(stream);
     stream << ")";
 }

@@ -20,19 +20,18 @@ private:
         const std::string& errMsg);
     std::shared_ptr<const Token> match(const std::string& expected);
 
-    std::shared_ptr<const AST::Block> file();
-    std::shared_ptr<const AST::Block> block();
+    std::shared_ptr<const AST::File> file();
+    std::shared_ptr<const AST::FunctionPrototype> externDecl();
     std::shared_ptr<const AST::Statement> statement();
     std::shared_ptr<const AST::Expression> expression();
     std::shared_ptr<const AST::FunctionCall> functionCall();
     std::shared_ptr<const AST::CharLiteral> charLiteral();
-    std::shared_ptr<const AST::Identifier> identifier();
 
 public:
     /**
      * Parse the tokens provided.
      */
-    static std::shared_ptr<const AST::Block> parse(std::queue<std::shared_ptr<const Token>>& tokens);
+    static std::shared_ptr<const AST::File> parse(std::queue<std::shared_ptr<const Token>>& tokens);
 };
 
 #endif //SANITY_PARSER_H
