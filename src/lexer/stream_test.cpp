@@ -40,13 +40,30 @@ TEST_F(StreamTestFixture, ConsumesWhileCharacterMatchRegex) {
     ASSERT_EQ("abc", token->source);
 }
 
-TEST_F(StreamTestFixture, MatchInvokesCallbackForMatchingRegex) {
-    bool called = false;
-    this->stream->match(std::regex("^[a-z]"), 1, [&called](Stream* stream) {
-        called = true;
+TEST_F(StreamTestFixture, MatchInvokesThenCallbackForMatchingRegex) {
+    bool thenCalled = false;
+    bool elseCalled = false;
+    this->stream->match(std::regex("^[a-z]"), 1, [&thenCalled](Stream* stream) {
+        thenCalled = true;
+    }, [&elseCalled](Stream* stream) {
+        elseCalled = true;
     });
 
-    ASSERT_EQ(true, called);
+    ASSERT_TRUE(thenCalled);
+    ASSERT_FALSE(elseCalled);
+}
+
+TEST_F(StreamTestFixture, MatchInvokesElseCallbackForNonMatchingRegex) {
+    bool thenCalled = false;
+    bool elseCalled = false;
+    this->stream->match(std::regex("^[0-9]"), 1, [&thenCalled](Stream* stream) {
+        thenCalled = true;
+    }, [&elseCalled](Stream* stream) {
+        elseCalled = true;
+    });
+
+    ASSERT_FALSE(thenCalled);
+    ASSERT_TRUE(elseCalled);
 }
 
 TEST_F(StreamTestFixture, MatchDoesNotInvokeCallbackForNonMatchingRegex) {

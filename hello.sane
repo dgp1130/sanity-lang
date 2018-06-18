@@ -12,5 +12,4 @@ putchar('r');
 putchar('l');
 putchar('d');
 putchar('!');
-putchar('
-');
+putchar('\n');

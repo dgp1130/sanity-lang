@@ -98,13 +98,22 @@ Stream* Stream::consumeWhile(const std::regex& matcher, const int limit) {
 }
 
 Stream* Stream::match(const std::regex& matcher, const int limit, const std::function<void (Stream* stream)> callback) {
+    return this->match(matcher, limit, callback, [](Stream* stream) {
+        // Do nothing on else.
+    });
+}
+
+Stream* Stream::match(const std::regex& matcher, const int limit, const std::function<void (Stream* stream)> thenCb,
+        const std::function<void (Stream* stream)> elseCb) {
     if (!this->active()) return this;
 
     const std::string str = dequeToString(this->chars, (unsigned long) limit);
 
     // Match the regular expression and invoke the callback if a match is found.
     if (std::regex_search(str, matcher)) {
-        callback(this);
+        thenCb(this);
+    } else {
+        elseCb(this);
     }
 
     return this;
@@ -140,7 +149,7 @@ void Stream::returnToken() {
     });
 }
 
-void Stream::throwException(const std::string& message) {
+void Stream::throwException(const std::string& message) const {
     throw SyntaxException(message, this->line, this->startCol, this->currentCol);
 }
 
@@ -148,7 +157,7 @@ std::shared_ptr<const Token> Stream::extractResult() {
     std::shared_ptr<const Token> token = this->result;
 
     // If no token to return and there is still data to process, then something has gone wrong.
-    if (token == nullptr && !this->chars.empty()) {
+    if (token == nullptr && (!this->buffer.empty() || !this->chars.empty())) {
         throw IllegalStateException("returnToken() not properly called before extractToken()");
     }
 

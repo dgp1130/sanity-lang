@@ -41,10 +41,17 @@ public:
     Stream* consumeWhile(const std::regex& matcher, int limit);
 
     /**
-     * If the current state of the stream matches the given regex up to the limit number of characters, then the
+     * If the current state of the Stream matches the given regex up to the limit number of characters, then the
      * callback is invoked.
      */
     Stream* match(const std::regex& matcher, int limit, std::function<void (Stream* stream)> callback);
+
+    /**
+     * If the current state of the Stream matches the given regex up to the limit number of characters, then the
+     * thenCb is invoked, otherwise the elseCb is invoked.
+     */
+    Stream* match(const std::regex& matcher, int limit, std::function<void (Stream* stream)> thenCb,
+        std::function<void (Stream* stream)> elseCb);
 
     /**
      * As long as the current state of the stream matches the given regex up to the limit number of characters, then
@@ -70,7 +77,7 @@ public:
      * Throw an exception with the given message. Automatically attaches the current line and col numbers to it.
      * @throws SyntaxException
      */
-    void throwException(const std::string& message);
+    void throwException(const std::string& message) const;
 
     /**
      * Takes the token previously saved by returnToken() and returns it while resetting the current state of the stream

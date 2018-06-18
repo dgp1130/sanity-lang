@@ -109,3 +109,62 @@ TEST(Lexer, IgnoresWhitespace) {
     tokens.pop();
     ASSERT_EQ("123", second->source);
 }
+
+TEST(Lexer, TokenizesEscapedCharacterLiterals) {
+    std::queue<char> q = QueueUtils::queueify(R"('\n' '\r' '\t' '\'' '\"' '\\')");
+    std::queue<std::shared_ptr<const Token>> tokens = Lexer::tokenize(q);
+
+    ASSERT_EQ(6, tokens.size());
+
+    std::shared_ptr<const Token> newline = tokens.front();
+    tokens.pop();
+    ASSERT_EQ("\n", newline->source);
+
+    std::shared_ptr<const Token> carriageReturn = tokens.front();
+    tokens.pop();
+    ASSERT_EQ("\r", carriageReturn->source);
+
+    std::shared_ptr<const Token> tab = tokens.front();
+    tokens.pop();
+    ASSERT_EQ("\t", tab->source);
+
+    std::shared_ptr<const Token> singleQuote = tokens.front();
+    tokens.pop();
+    ASSERT_EQ("\'", singleQuote->source);
+
+    std::shared_ptr<const Token> doubleQuote = tokens.front();
+    tokens.pop();
+    ASSERT_EQ("\"", doubleQuote->source);
+
+    std::shared_ptr<const Token> backslash = tokens.front();
+    tokens.pop();
+    ASSERT_EQ("\\", backslash->source);
+}
+
+TEST(Lexer, TokenizingUnknownEscapeCharacterThrowsException) {
+    std::queue<char> q = QueueUtils::queueify("\'\\z\'");
+    ASSERT_THROW(Lexer::tokenize(q), SyntaxException);
+}
+
+TEST(Lexer, TokenizingInvalidCharacterLiteralsThrowsException) {
+    std::queue<char> qNewline = QueueUtils::queueify("\'\n\'");
+    ASSERT_THROW(Lexer::tokenize(qNewline), SyntaxException);
+
+    std::queue<char> qCarriageReturn = QueueUtils::queueify("\'\r\'");
+    ASSERT_THROW(Lexer::tokenize(qCarriageReturn), SyntaxException);
+
+    std::queue<char> qTab = QueueUtils::queueify("\'\t\'");
+    ASSERT_THROW(Lexer::tokenize(qTab), SyntaxException);
+
+    std::queue<char> qSingleQuote = QueueUtils::queueify("\'\'\'");
+    ASSERT_THROW(Lexer::tokenize(qSingleQuote), SyntaxException);
+
+    std::queue<char> qDoubleQuote = QueueUtils::queueify("\'\"\'");
+    ASSERT_THROW(Lexer::tokenize(qDoubleQuote), SyntaxException);
+
+    // Backslash is weird because the '\' escapes the trailing single-quote waiting for another single quote.
+    // This is actually an unexpected EOF file error. This throws an IllegalStateException, which it really shouldn't,
+    // but close enough for now.
+    std::queue<char> qBackslash = QueueUtils::queueify("\'\\\'");
+    ASSERT_ANY_THROW(Lexer::tokenize(qBackslash));
+}
