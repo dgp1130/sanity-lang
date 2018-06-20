@@ -37,7 +37,9 @@ std::shared_ptr<const Token> Parser::match(const std::string& expected) {
     return this->match([&expected](std::shared_ptr<const Token> token) { return token->source == expected; }, expected);
 };
 
-// <file> -> <externDecl> <block> | <statement> <block> | ø
+// <file> ::= <externDecl> <block>
+//          | <statement> <block>
+//          | ø
 std::shared_ptr<const AST::File> Parser::file() {
     std::vector<std::shared_ptr<const AST::Function>> externDecls;
     std::vector<std::shared_ptr<const AST::Statement>> statements;
@@ -53,7 +55,7 @@ std::shared_ptr<const AST::File> Parser::file() {
     return std::make_shared<const AST::File>(AST::File(externDecls, statements));
 }
 
-// <externDecl> -> extern <name>: <func-type> ;
+// <externDecl> ::= extern <name>: <func-type> ;
 std::shared_ptr<const AST::Function> Parser::externDecl() {
     this->match("extern");
     std::shared_ptr<const Token> name = this->match([](std::shared_ptr<const Token> token) {
@@ -66,14 +68,15 @@ std::shared_ptr<const AST::Function> Parser::externDecl() {
     return std::make_shared<const AST::Function>(AST::Function(name->source, type));
 }
 
-// <statement> -> <expression> ;
+// <statement> ::= <expression> ;
 std::shared_ptr<const AST::Statement> Parser::statement() {
     std::shared_ptr<const AST::Expression> expr = this->expression();
     this->match(";");
     return std::make_shared<const AST::Statement>(AST::Statement(expr));
 }
 
-// <type> -> int | <func-type>
+// <type> ::= int
+//          | <func-type>
 std::shared_ptr<const AST::Type> Parser::type() {
     if (this->tokens.empty()) throw ParseException("Expected a type, but got EOF.");
 
@@ -87,9 +90,10 @@ std::shared_ptr<const AST::Type> Parser::type() {
     }
 }
 
-// <func-type> -> ( <type> <types> ) -> <type>
-// <func-type> -> ( ) -> <type>
-// <types> -> , <type> | ø
+// <func-type> ::= ( <type> <types> ) -> <type>
+//               | ( ) -> <type>
+// <types> ::= , <type>
+//           | ø
 std::shared_ptr<const AST::FunctionPrototype> Parser::funcType() {
     std::vector<std::shared_ptr<const AST::Type>> parameters;
 
@@ -109,7 +113,8 @@ std::shared_ptr<const AST::FunctionPrototype> Parser::funcType() {
     return std::make_shared<AST::FunctionPrototype>(AST::FunctionPrototype(parameters, returnType));
 }
 
-// <expression> -> <function-call> | <char-literal>
+// <expression> ::= <function-call>
+//                | <char-literal>
 std::shared_ptr<const AST::Expression> Parser::expression() {
     if (this->tokens.empty()) throw ParseException("Expected an expression, but got EOF.");
 
@@ -120,7 +125,7 @@ std::shared_ptr<const AST::Expression> Parser::expression() {
     }
 }
 
-// <function-call> -> <name> ( <expression> )
+// <function-call> ::= <name> ( <expression> )
 std::shared_ptr<const AST::FunctionCall> Parser::functionCall() {
     std::shared_ptr<const Token> callee = this->match([](std::shared_ptr<const Token> token) {
         return !token->isCharLiteral;
