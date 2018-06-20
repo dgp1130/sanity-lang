@@ -8,7 +8,7 @@
 
 /**
  * Class for parsing the Sanity language. Uses a recursive descent parsing design. The class is only used via the static
- * parse() function, however the class is necessary to maintain state so that the match() methods are usuable.
+ * parse() function, however the class is necessary to maintain state so that the match() methods are usable.
  */
 class Parser {
 private:
@@ -21,8 +21,10 @@ private:
     std::shared_ptr<const Token> match(const std::string& expected);
 
     std::shared_ptr<const AST::File> file();
-    std::shared_ptr<const AST::FunctionPrototype> externDecl();
+    std::shared_ptr<const AST::Function> externDecl();
     std::shared_ptr<const AST::Statement> statement();
+    std::shared_ptr<const AST::Type> type();
+    std::shared_ptr<const AST::FunctionPrototype> funcType();
     std::shared_ptr<const AST::Expression> expression();
     std::shared_ptr<const AST::FunctionCall> functionCall();
     std::shared_ptr<const AST::CharLiteral> charLiteral();

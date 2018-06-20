@@ -1,4 +1,4 @@
-extern putchar;
+extern putchar: (int) -> int;
 
 putchar('H');
 putchar('e');

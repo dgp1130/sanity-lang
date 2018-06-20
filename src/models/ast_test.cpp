@@ -5,13 +5,37 @@
 #include "token_builder.h"
 #include "llvm/Support/raw_ostream.h"
 
+TEST(AST, IntegerTypePrints) {
+    const auto integer = AST::IntegerType();
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    integer.print(ss);
+    ASSERT_EQ("int", ss.str());
+}
+
 TEST(AST, FunctionPrototypePrints) {
-    const auto proto = AST::FunctionPrototype("test", std::vector<llvm::Type*>({ llvm::Type::getInt32Ty(*context) }));
+    const auto integer = std::make_shared<const AST::IntegerType>(AST::IntegerType());
+    const auto params = std::vector<std::shared_ptr<const AST::Type>>({ integer, integer });
+    const auto proto = AST::FunctionPrototype(params, integer);
 
     std::string str;
     llvm::raw_string_ostream ss(str);
     proto.print(ss);
-    ASSERT_EQ("extern test(i32);", ss.str());
+    ASSERT_EQ("(int, int) -> int", ss.str());
+}
+
+TEST(AST, FunctionPrints) {
+    const auto integer = std::make_shared<const AST::IntegerType>(AST::IntegerType());
+    const auto params = std::vector<std::shared_ptr<const AST::Type>>({ integer, integer });
+    const auto proto = std::make_shared<const AST::FunctionPrototype>(AST::FunctionPrototype(
+            params, integer /* returnType */));
+    const auto func = AST::Function("test", proto);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    func.print(ss);
+    ASSERT_EQ("extern test: (int, int) -> int;", ss.str());
 }
 
 TEST(AST, StatementPrints) {
@@ -26,9 +50,10 @@ TEST(AST, StatementPrints) {
 }
 
 TEST(AST, FilePrints) {
-    std::shared_ptr<const Token> decl = TokenBuilder("putchar").build();
-    const auto externDecl = std::make_shared<const AST::FunctionPrototype>(AST::FunctionPrototype("putchar",
-        std::vector<llvm::Type*>({ llvm::Type::getInt32Ty(*context) })));
+    const auto params = std::vector<std::shared_ptr<const AST::Type>>({ std::make_shared<const AST::IntegerType>(AST::IntegerType()) });
+    const auto returnValue = std::make_shared<AST::IntegerType>(AST::IntegerType());
+    const auto externDeclType = std::make_shared<const AST::FunctionPrototype>(AST::FunctionPrototype(params, returnValue));
+    const auto externDecl = std::make_shared<const AST::Function>(AST::Function("putchar", externDeclType));
 
     std::shared_ptr<const Token> char1Token = TokenBuilder("a").setCharLiteral(true).build();
     const auto char1 = std::make_shared<const AST::CharLiteral>(AST::CharLiteral(char1Token));
@@ -38,14 +63,14 @@ TEST(AST, FilePrints) {
     const auto char2 = std::make_shared<const AST::CharLiteral>(AST::CharLiteral(char2Token));
     const auto secondStmt = std::make_shared<const AST::Statement>(AST::Statement(char2));
 
-    const std::vector<std::shared_ptr<const AST::FunctionPrototype>> externDecls = {externDecl};
+    const std::vector<std::shared_ptr<const AST::Function>> externDecls = {externDecl};
     const std::vector<std::shared_ptr<const AST::Statement>> stmts = {firstStmt, secondStmt};
     const auto file = AST::File(externDecls, stmts);
 
     std::string str;
     llvm::raw_string_ostream ss(str);
     file.print(ss);
-    ASSERT_EQ("extern putchar(i32);\n\'a\';\n\'b\';\n", ss.str());
+    ASSERT_EQ("extern putchar: (int) -> int;\n\'a\';\n\'b\';\n", ss.str());
 }
 
 TEST(AST, CharLiteralParsesToChar) {

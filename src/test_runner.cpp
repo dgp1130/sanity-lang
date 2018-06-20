@@ -14,7 +14,7 @@
 // Declared in globals.h
 std::unique_ptr<llvm::LLVMContext> context = llvm::make_unique<llvm::LLVMContext>();
 llvm::IRBuilder<> builder(*context);
-std::unique_ptr<llvm::Module> module = llvm::make_unique<llvm::Module>("Sanity", *context);
+std::unique_ptr<llvm::Module> module = llvm::make_unique<llvm::Module>("SanityTest", *context);
 std::map<std::string, llvm::Value*> namedValues;
 
 /**

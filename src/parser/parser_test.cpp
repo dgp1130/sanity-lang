@@ -20,6 +20,54 @@ TEST(Parser, ParsesEmptyFile) {
     ASSERT_TRUE(file->statements.empty());
 }
 
+TEST(Parser, ParsesExtern) {
+    std::shared_ptr<const Token> tokens[] = {
+        TokenBuilder("extern").build(),
+        TokenBuilder("test").build(),
+        TokenBuilder(":").build(),
+        TokenBuilder("(").build(),
+        TokenBuilder("int").build(),
+        TokenBuilder(",").build(),
+        TokenBuilder("int").build(),
+        TokenBuilder(")").build(),
+        TokenBuilder("->").build(),
+        TokenBuilder("int").build(),
+        TokenBuilder(";").build(),
+    };
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 11 /* length */);
+
+    std::shared_ptr<const AST::File> file = Parser::parse(input);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    file->print(ss);
+    ASSERT_EQ("extern test: (int, int) -> int;\n", ss.str());
+}
+
+TEST(Parser, ThrowsParseExceptionOnExternsUnexpectedEOF) {
+    std::shared_ptr<const Token> tokens[] = {
+            TokenBuilder("extern").build(),
+            TokenBuilder("test").build(),
+            TokenBuilder(":").build(),
+    };
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 3 /* length */);
+
+    ASSERT_THROW(Parser::parse(input), ParseException);
+}
+
+TEST(Parser, ThrowsParseExceptionOnExternsStatementWithNoType) {
+    std::shared_ptr<const Token> tokens[] = {
+            TokenBuilder("extern").build(),
+            TokenBuilder("test").build(),
+            TokenBuilder(":").build(),
+            TokenBuilder("blarg").build(),
+            TokenBuilder(";").build(),
+    };
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 5 /* length */);
+
+    ASSERT_THROW(Parser::parse(input), ParseException);
+}
+
 TEST(Parser, ParsesSingleFunctionCall) {
     std::shared_ptr<const Token> tokens[] = {
         TokenBuilder("test").build(),

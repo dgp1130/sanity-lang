@@ -24,25 +24,40 @@ typedef Exceptions::UndeclaredException UndeclaredException;
 const int CHAR_BIT_SIZE = 32; // putchar() uses int32 rather than int8.
 const int INTEGER_BIT_SIZE = 32;
 
+llvm::IntegerType* Generator::generate(const AST::IntegerType& integer) {
+    return llvm::IntegerType::getInt32Ty(*context);
+}
+
+llvm::FunctionType* Generator::generate(const AST::FunctionPrototype& prototype) {
+    std::vector<llvm::Type*> parameterTypes;
+    for (const auto& param : prototype.parameters) {
+        parameterTypes.push_back(param->generate(*this));
+    }
+    llvm::Type* returnType = prototype.returnType->generate(*this);
+
+    return llvm::FunctionType::get(returnType, parameterTypes, false /* isVarArgs */);
+}
+
+llvm::Function* Generator::generate(const AST::Function& func) {
+    llvm::FunctionType* type = func.type->generate(*this);
+    return llvm::Function::Create(type, llvm::Function::ExternalLinkage, func.name, module.get());
+}
+
 llvm::Value* Generator::generate(const AST::Statement& stmt) {
     return stmt.expr->generate(*this);
 }
 
-llvm::Function* Generator::generate(const AST::FunctionPrototype& prototype) {
-    llvm::FunctionType* type = llvm::FunctionType::get(llvm::Type::getInt32Ty(*context), prototype.parameters,
-            false /* isVarArgs */);
-    return llvm::Function::Create(type, llvm::Function::ExternalLinkage, prototype.name,
-            module.get());
-}
-
 llvm::Function* Generator::generate(const AST::File& file) {
-    for (const auto& funcDeclaration : file.funcDeclarations) {
-        funcDeclaration->generate(*this);
+    for (const auto& func : file.funcs) {
+        func->generate(*this);
     }
 
     // Stub a main function because one is required.
-    const AST::FunctionPrototype mainProto("main", std::vector<llvm::Type*>());
-    llvm::Function* main = mainProto.generate(*this);
+    const auto params = std::vector<std::shared_ptr<const AST::Type>>();
+    const auto returnType = std::make_shared<AST::IntegerType>(AST::IntegerType());
+    const auto mainProto = std::make_shared<const AST::FunctionPrototype>(AST::FunctionPrototype(params, returnType));
+    const AST::Function mainFunc("main", mainProto);
+    llvm::Function* main = mainFunc.generate(*this);
 
     // Create a new basic block to start insertion into.
     llvm::BasicBlock* bb = llvm::BasicBlock::Create(*context, "entry", main);

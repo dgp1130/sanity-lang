@@ -25,12 +25,38 @@ namespace AST {
         virtual llvm::Value* generate(Generator& generator) const = 0;
     };
 
-    class FunctionPrototype : public Element {
+    class Type : public Element {
+    public:
+        virtual llvm::Type* generate(Generator& generator) const = 0;
+    };
+
+    class IntegerType : public Type {
+    public:
+        IntegerType() = default;
+
+        llvm::IntegerType* generate(Generator& generator) const override;
+
+        void print(llvm::raw_ostream& stream) const override;
+    };
+
+    class FunctionPrototype : public Type {
+    public:
+        const std::vector<std::shared_ptr<const Type>> parameters;
+        const std::shared_ptr<const Type> returnType;
+
+        FunctionPrototype(const std::vector<std::shared_ptr<const Type>>& parameters, std::shared_ptr<const Type> returnType);
+
+        llvm::FunctionType* generate(Generator& generator) const override;
+
+        void print(llvm::raw_ostream& stream) const override;
+    };
+
+    class Function : public Element {
     public:
         const std::string name;
-        const std::vector<llvm::Type*> parameters;
+        std::shared_ptr<const FunctionPrototype> type;
 
-        FunctionPrototype(const std::string& name, std::vector<llvm::Type*> parameters);
+        Function(const std::string& name, std::shared_ptr<const FunctionPrototype> type);
 
         llvm::Function* generate(Generator& generator) const;
 
@@ -50,10 +76,10 @@ namespace AST {
 
     class File : public Element {
     public:
-        const std::vector<std::shared_ptr<const FunctionPrototype>> funcDeclarations;
+        const std::vector<std::shared_ptr<const Function>> funcs;
         const std::vector<std::shared_ptr<const Statement>> statements;
 
-        File(std::vector<std::shared_ptr<const FunctionPrototype>> funcDeclarations,
+        File(std::vector<std::shared_ptr<const Function>> funcs,
             std::vector<std::shared_ptr<const Statement>> statements);
 
         llvm::Function* generate(Generator& generator) const;

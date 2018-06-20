@@ -76,6 +76,14 @@ TEST(Lexer, TokenizingInvalidCharactersThrowsSyntaxException) {
     ASSERT_THROW(Lexer::tokenize(q), SyntaxException);
 }
 
+TEST(Lexer, TokenizesFunctionYieldToken) {
+    std::queue<char> q = QueueUtils::queueify("->");
+    std::queue<std::shared_ptr<const Token>> tokens = Lexer::tokenize(q);
+
+    ASSERT_EQ(1, tokens.size());
+    ASSERT_EQ("->", tokens.front()->source);
+}
+
 TEST(Lexer, TokenizesPunctuation) {
     std::queue<char> q = QueueUtils::queueify(".!?");
     std::queue<std::shared_ptr<const Token>> tokens = Lexer::tokenize(q);

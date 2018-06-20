@@ -4,21 +4,44 @@
 #include "../generator/generator.h"
 #include "llvm/Support/raw_ostream.h"
 
-AST::FunctionPrototype::FunctionPrototype(const std::string& name, const std::vector<llvm::Type*> parameters)
-        : name(name), parameters(parameters) { }
+void AST::IntegerType::print(llvm::raw_ostream& stream) const {
+    stream << "int";
+}
 
-llvm::Function* AST::FunctionPrototype::generate(Generator& generator) const {
-    generator.generate(*this);
+llvm::IntegerType* AST::IntegerType::generate(Generator& generator) const {
+    return generator.generate(*this);
+}
+
+AST::FunctionPrototype::FunctionPrototype(const std::vector<std::shared_ptr<const AST::Type>>& parameters,
+        std::shared_ptr<const AST::Type> returnType)
+    : parameters(parameters), returnType(std::move(returnType)) { }
+
+llvm::FunctionType* AST::FunctionPrototype::generate(Generator& generator) const {
+    return generator.generate(*this);
 }
 
 void AST::FunctionPrototype::print(llvm::raw_ostream& stream) const {
-    stream << "extern " << this->name << "(";
+    stream << "(";
     if (!this->parameters.empty()) this->parameters[0]->print(stream);
     for (int i = 1; i < this->parameters.size(); ++i) {
         stream << ", ";
         this->parameters[i]->print(stream);
     }
-    stream << ");";
+    stream << ") -> ";
+    this->returnType->print(stream);
+}
+
+AST::Function::Function(const std::string& name, std::shared_ptr<const AST::FunctionPrototype> type)
+    : name(name), type(std::move(type)) { }
+
+llvm::Function* AST::Function::generate(Generator& generator) const {
+    return generator.generate(*this);
+}
+
+void AST::Function::print(llvm::raw_ostream& stream) const {
+    stream << "extern " << this->name << ": ";
+    this->type->print(stream);
+    stream << ";";
 }
 
 AST::Statement::Statement(std::shared_ptr<const AST::Expression> expr) : expr(std::move(expr)) { }
@@ -32,17 +55,17 @@ void AST::Statement::print(llvm::raw_ostream& stream) const {
     stream << ";";
 }
 
-AST::File::File(std::vector<std::shared_ptr<const AST::FunctionPrototype>> funcDeclarations,
+AST::File::File(std::vector<std::shared_ptr<const AST::Function>> funcs,
         std::vector<std::shared_ptr<const AST::Statement>> statements)
-    : funcDeclarations(std::move(funcDeclarations)), statements(std::move(statements)) { }
+    : funcs(std::move(funcs)), statements(std::move(statements)) { }
 
 llvm::Function* AST::File::generate(Generator& generator) const {
     return generator.generate(*this);
 }
 
 void AST::File::print(llvm::raw_ostream& stream) const {
-    for (const auto& funcDeclaration : this->funcDeclarations) {
-        funcDeclaration->print(stream);
+    for (const auto& func : this->funcs) {
+        func->print(stream);
         stream << "\n";
     }
 

@@ -16,8 +16,10 @@
  */
 class Generator {
 public:
+    llvm::IntegerType* generate(const AST::IntegerType& integer);
+    llvm::FunctionType* generate(const AST::FunctionPrototype& prototype);
+    llvm::Function* generate(const AST::Function& func);
     llvm::Value* generate(const AST::Statement& stmt);
-    llvm::Function* generate(const AST::FunctionPrototype& prototype);
     llvm::Function* generate(const AST::File& file);
     llvm::Value* generate(const AST::CharLiteral& literal);
     llvm::CallInst* generate(const AST::FunctionCall& call);

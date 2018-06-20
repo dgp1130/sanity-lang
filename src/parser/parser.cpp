@@ -37,9 +37,9 @@ std::shared_ptr<const Token> Parser::match(const std::string& expected) {
     return this->match([&expected](std::shared_ptr<const Token> token) { return token->source == expected; }, expected);
 };
 
-// <file> => <externDecl> <block> | <statement> <block> | ø
+// <file> -> <externDecl> <block> | <statement> <block> | ø
 std::shared_ptr<const AST::File> Parser::file() {
-    std::vector<std::shared_ptr<const AST::FunctionPrototype>> externDecls;
+    std::vector<std::shared_ptr<const AST::Function>> externDecls;
     std::vector<std::shared_ptr<const AST::Statement>> statements;
 
     while (!this->tokens.empty()) {
@@ -53,17 +53,17 @@ std::shared_ptr<const AST::File> Parser::file() {
     return std::make_shared<const AST::File>(AST::File(externDecls, statements));
 }
 
-// <externDecl> -> extern <name> ;
-std::shared_ptr<const AST::FunctionPrototype> Parser::externDecl() {
+// <externDecl> -> extern <name>: <func-type> ;
+std::shared_ptr<const AST::Function> Parser::externDecl() {
     this->match("extern");
     std::shared_ptr<const Token> name = this->match([](std::shared_ptr<const Token> token) {
         return !token->isCharLiteral;
     }, "extern");
+    this->match(":");
+    std::shared_ptr<const AST::FunctionPrototype> type = this->funcType();
     this->match(";");
 
-    // Assume extern is an (i32) -> i32 function like putchar().
-    return std::make_shared<const AST::FunctionPrototype>(AST::FunctionPrototype(name->source,
-        std::vector<llvm::Type*>({ llvm::Type::getInt32Ty(*context) })));
+    return std::make_shared<const AST::Function>(AST::Function(name->source, type));
 }
 
 // <statement> -> <expression> ;
@@ -71,6 +71,42 @@ std::shared_ptr<const AST::Statement> Parser::statement() {
     std::shared_ptr<const AST::Expression> expr = this->expression();
     this->match(";");
     return std::make_shared<const AST::Statement>(AST::Statement(expr));
+}
+
+// <type> -> int | <func-type>
+std::shared_ptr<const AST::Type> Parser::type() {
+    if (this->tokens.empty()) throw ParseException("Expected a type, but got EOF.");
+
+    if (this->tokens.front()->source == "int") {
+        this->match("int");
+        return std::make_shared<AST::IntegerType>(AST::IntegerType());
+    } else if (this->tokens.front()->source == "(") {
+        return this->funcType();
+    } else {
+        throw ParseException("Expected a type, but got \"" + this->tokens.front()->source + "\"");
+    }
+}
+
+// <func-type> -> ( <type> <types> ) -> <type>
+// <func-type> -> ( ) -> <type>
+// <types> -> , <type> | ø
+std::shared_ptr<const AST::FunctionPrototype> Parser::funcType() {
+    std::vector<std::shared_ptr<const AST::Type>> parameters;
+
+    this->match("(");
+    if (this->tokens.front()->source != ")") { // Has parameters
+        parameters.push_back(this->type());
+        while (this->tokens.front()->source == ",") {
+            this->match(",");
+            parameters.push_back(this->type());
+        }
+    }
+    this->match(")");
+
+    this->match("->");
+    std::shared_ptr<const AST::Type> returnType = this->type();
+
+    return std::make_shared<AST::FunctionPrototype>(AST::FunctionPrototype(parameters, returnType));
 }
 
 // <expression> -> <function-call> | <char-literal>
