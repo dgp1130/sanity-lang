@@ -353,7 +353,79 @@ values and types can be easily stored with any additional complexity.
 
 #### First-Class Generics
 
-#### Type Subtraction
+#### Type Operations
+
+Types in Sanity can be conceptualized as sets. For instance, the `int` type can be thought of as a set
+of all 32-bit integers. The algebraic OR of two types is similar to performing the union operation of
+two types. However, there are other set operations that can be applied as well, and this can enable
+(among other things) one type to be "subtracted" from another (not final syntax).
+
+```
+int|string|float - float == int|string;
+```
+
+How can this be useful? Consider the `then()` function for a `Promise` (JavaScript). Imagine mapping
+a type `A = A1|A2|A3` to a type `B = B1|B2|B3` with a direct correlation between `A1 -> B1`, `A2 -> B2`,
+and `A3 -> B3`. Rather than using a single transformation function which then disambiguates the `A`
+subtype and converts it to the appropriate `B` subtype, it can be beneficial to use three different
+transformations, each responsible for a single subtype. This could look something like this:
+
+```
+let promiseOfA: Promise<A, void> = ...;
+let promiseOfB: Promise<B, void> = promiseOfA
+    .on((a1: A1) -> B1.from(a1))
+    .on((a2: A2) -> B2.from(a2))
+    .on((a3: A3) -> B3.from(a3))
+    .then();
+```
+
+Note: I'm not suggesting this as a general replacement of the `then()` function, just illustrating the
+power of subtracting types. Each `on()` call is responsible for mapping one subtype of `A` to one subtype
+of `B`. Now, is it possible to do this in a type-safe manner? Consider the following definition:
+
+```
+class Promise<A, B> {
+    let value: A|B;
+    
+    func on<A_SUBTYPE : A>(cb: (a: A_SUBTYPE) -> B_SUBTYPE) : Promise<A - A_SUBTYPE, B | B_SUBTYPE> {
+        if (value instanceof A_SUBTYPE) {
+            let b : B_SUBTYPE = cb()
+            return new Promise<A - A_SUBTYPE, B | B_SUBTYPE>(b);
+        } else {
+            return new Promise<A - A_SUBTYPE, B | B_SUBTYPE>(a);
+        }
+    }
+    
+    func then() {
+        #if (A == void) {
+            throw CompilerError("Need to handle all A subtypes before calling then().");
+        }
+        
+        return new Promise<B, void>(value as B);
+    }
+}
+```
+
+This `Promise` has a value which starts as an `A`. Each time `.on()` is called, the `A` subtype it consumes
+is removed from the `A` type and the subtype it returns is added to the `B` type (which starts as `void`
+which represents the empty set). The value is passed through if it is given a callback expecting a
+different subtype. When it is called with the correct subtype, it invokes the callback to convert the `A`
+into a `B`, which then passes through the remaining `.on()` calls as the types continue to narrow.
+
+After all the `.on()` calls the type has been narrowed to `Promise<void, B1|B2|B3>` because all `A` subtypes
+have been removed and all `B` subtypes have been added. Calling `then()` performs a compile time check to
+verify that all `A` types have been handled. If any are left, it is a compile-time error. Otherwise, it can
+confidently create a new `Promise` loading the `B` in the first position ready to the repeat the process
+with another set of `.on()` calls.
+
+The `#if` syntax for a compile-time statement comes from
+[Jai](https://github.com/BSVino/JaiPrimer/blob/master/JaiPrimer.md), Sanity will have a very similar concept.
+
+Being able to perform operations on the underlying types in generics can allow for far more powerful
+functions and classes with more accurate type systems. Subtracting one type from another is just one example
+of what this could do.
+
+TODO: Continue with negative types and so on...
 
 #### Null and Exceptions
 
