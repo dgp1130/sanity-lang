@@ -90,13 +90,16 @@ TEST(AST, CharLiteralPrints) {
 
 TEST(AST, FunctionCallPrints) {
     const std::shared_ptr<const Token> callee = TokenBuilder("test").build();
-    const std::shared_ptr<const Token> charLiteral = TokenBuilder("a").setCharLiteral(true).build();
-    const auto argument = std::make_shared<AST::CharLiteral>(AST::CharLiteral(charLiteral));
+    const std::shared_ptr<const Token> charLiteral1 = TokenBuilder("a").setCharLiteral(true).build();
+    const auto arg1 = std::make_shared<const AST::CharLiteral>(AST::CharLiteral(charLiteral1));
+    const std::shared_ptr<const Token> charLiteral2 = TokenBuilder("b").setCharLiteral(true).build();
+    const auto arg2 = std::make_shared<const AST::CharLiteral>(AST::CharLiteral(charLiteral2));
+    const std::vector<std::shared_ptr<const AST::Expression>> args({ arg1, arg2 });
 
-    const auto func = AST::FunctionCall(callee, argument);
+    const auto func = AST::FunctionCall(callee, args);
 
     std::string str;
     llvm::raw_string_ostream ss(str);
     func.print(ss);
-    ASSERT_EQ("test(\'a\')", ss.str());
+    ASSERT_EQ("test(\'a\', \'b\')", ss.str());
 }

@@ -73,17 +73,36 @@ TEST(Parser, ParsesSingleFunctionCall) {
         TokenBuilder("test").build(),
         TokenBuilder("(").build(),
         TokenBuilder("a").setCharLiteral(true).build(),
+        TokenBuilder(",").build(),
+        TokenBuilder("b").setCharLiteral(true).build(),
         TokenBuilder(")").build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 5 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 7 /* length */);
 
     std::shared_ptr<const AST::File> file = Parser::parse(input);
 
     std::string str;
     llvm::raw_string_ostream ss(str);
     file->print(ss);
-    ASSERT_EQ("test(\'a\');\n", ss.str());
+    ASSERT_EQ("test(\'a\', \'b\');\n", ss.str());
+}
+
+TEST(Parser, ParsesFunctionCallWithEmptyArguments) {
+    std::shared_ptr<const Token> tokens[] = {
+        TokenBuilder("test").build(),
+        TokenBuilder("(").build(),
+        TokenBuilder(")").build(),
+        TokenBuilder(";").build(),
+    };
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 4 /* length */);
+
+    std::shared_ptr<const AST::File> file = Parser::parse(input);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    file->print(ss);
+    ASSERT_EQ("test();\n", ss.str());
 }
 
 TEST(Parser, ParsesSingleCharLiteralStatement) {
@@ -137,17 +156,6 @@ TEST(Parser, ThrowsParseExceptionOnFunctionCallMissingOpenParen) {
         TokenBuilder(";").build(),
     };
     std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 2 /* length */);
-
-    ASSERT_THROW(Parser::parse(input), ParseException);
-}
-
-TEST(Parser, ThrowsParseExceptionOnFunctionCallMissingArgument) {
-    std::shared_ptr<const Token> tokens[] = {
-        TokenBuilder("test").build(),
-        TokenBuilder("(").build(),
-        TokenBuilder(")").build(),
-    };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 3 /* length */);
 
     ASSERT_THROW(Parser::parse(input), ParseException);
 }

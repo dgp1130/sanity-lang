@@ -85,8 +85,9 @@ void AST::CharLiteral::print(llvm::raw_ostream& stream) const {
     stream << "\'" << this->value << "\'";
 }
 
-AST::FunctionCall::FunctionCall(std::shared_ptr<const Token> callee, std::shared_ptr<const AST::Expression> argument)
-    : callee(callee->source), argument(std::move(argument)) { }
+AST::FunctionCall::FunctionCall(std::shared_ptr<const Token> callee,
+        const std::vector<std::shared_ptr<const AST::Expression>> arguments)
+    : callee(callee->source), arguments(arguments) { }
 
 llvm::Value* AST::FunctionCall::generate(Generator& generator) const {
     return generator.generate(*this);
@@ -94,6 +95,10 @@ llvm::Value* AST::FunctionCall::generate(Generator& generator) const {
 
 void AST::FunctionCall::print(llvm::raw_ostream& stream) const {
     stream << this->callee << "(";
-    this->argument->print(stream);
+    if (!this->arguments.empty()) this->arguments[0]->print(stream);
+    for (int i = 1; i < this->arguments.size(); ++i) {
+        stream << ", ";
+        this->arguments[i]->print(stream);
+    }
     stream << ")";
 }

@@ -101,9 +101,10 @@ namespace AST {
     class FunctionCall : public Expression {
     public:
         const std::string callee;
-        std::shared_ptr<const Expression> argument;
+        const std::vector<std::shared_ptr<const Expression>> arguments;
 
-        FunctionCall(std::shared_ptr<const Token> callee, std::shared_ptr<const Expression> argument);
+        FunctionCall(std::shared_ptr<const Token> callee,
+            std::vector<std::shared_ptr<const Expression>> arguments);
 
         llvm::Value* generate(Generator& generator) const override;
 

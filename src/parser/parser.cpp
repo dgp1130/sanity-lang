@@ -90,10 +90,11 @@ std::shared_ptr<const AST::Type> Parser::type() {
     }
 }
 
-// <func-type> ::= ( <type> <types> ) -> <type>
-//               | ( ) -> <type>
-// <types> ::= , <type>
+// <func-type> ::= ( <types> ) -> <type>
+// <types> ::= <type> <types'>
 //           | ø
+// <types'> ::= , <type>
+//            | ø
 std::shared_ptr<const AST::FunctionPrototype> Parser::funcType() {
     std::vector<std::shared_ptr<const AST::Type>> parameters;
 
@@ -125,16 +126,30 @@ std::shared_ptr<const AST::Expression> Parser::expression() {
     }
 }
 
-// <function-call> ::= <name> ( <expression> )
+// <function-call> ::= <name> ( <arguments> )
+// <arguments> ::= <argument> <arguments'>
+//               | ø
+// <arguments'> ::= , <argument>
+//                | ø
 std::shared_ptr<const AST::FunctionCall> Parser::functionCall() {
     std::shared_ptr<const Token> callee = this->match([](std::shared_ptr<const Token> token) {
         return !token->isCharLiteral;
     }, "function name");;
     this->match("(");
-    std::shared_ptr<const AST::Expression> argument = this->expression();
+
+    // Parse arguments
+    std::vector<std::shared_ptr<const AST::Expression>> arguments;
+    if (this->tokens.front()->source != ")") {
+        arguments.push_back(this->expression());
+        while (this->tokens.front()->source == ",") {
+            this->match(",");
+            arguments.push_back(this->expression());
+        }
+    }
+
     this->match(")");
 
-    return std::make_shared<AST::FunctionCall>(AST::FunctionCall(callee, argument));
+    return std::make_shared<const AST::FunctionCall>(AST::FunctionCall(callee, arguments));
 }
 
 std::shared_ptr<const AST::CharLiteral> Parser::charLiteral() {

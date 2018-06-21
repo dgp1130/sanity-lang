@@ -92,14 +92,10 @@ llvm::CallInst* Generator::generate(const AST::FunctionCall& call) {
 
     if (!func) throw UndeclaredException("Function \"" + call.callee + "\" not declared in this scope.");
 
-    if (func->arg_size() != 1) {
-        throw TypeException("Function \"" + call.callee + "\" wants " + std::to_string(func->arg_size())
-            + " arguments, expected 1.");
+    std::vector<llvm::Value*> arguments;
+    for (const auto& arg : call.arguments) {
+        arguments.push_back(arg->generate(*this));
     }
-
-    llvm::Value* arg = call.argument->generate(*this);
-    if (!arg) throw AssertionException("Unable to generate argument to function call: " + call.callee);
-    std::vector<llvm::Value*> arguments({ arg });
 
     return builder.CreateCall(func, arguments);
 }
