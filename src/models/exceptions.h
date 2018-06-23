@@ -20,7 +20,7 @@ namespace Exceptions {
      * Exception for a file not being found.
      */
     struct FileNotFoundException : public std::exception {
-        const std::string filePath;
+        const std::string message;
 
         /**
          * @param filePath The path to the given file. This can be absolute or relative to any location, but should be
@@ -57,12 +57,9 @@ namespace Exceptions {
      * Exception to throw on a syntax error encountered during lexical analysis.
      */
     struct SyntaxException : public std::exception {
-        const std::string message;
-        const int line;
-        const int startCol;
-        const int endCol;
+        std::string message;
 
-        SyntaxException(const std::string& message, const int line, const int startCol, const int endCol);
+        SyntaxException(const std::string& message, int line, int startCol, int endCol);
 
         const char* what() const noexcept override;
     };
@@ -73,7 +70,7 @@ namespace Exceptions {
     struct TypeException : public std::exception {
         const std::string message;
 
-        TypeException(const std::string& message);
+        explicit TypeException(const std::string& message);
 
         const char* what() const noexcept override;
     };

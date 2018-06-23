@@ -39,11 +39,7 @@ int main(const int argc, const char* argv[]) {
     try {
         chars = FileUtils::readFileChars(argv[1]);
     } catch (const FileNotFoundException& ex) {
-        // Log error and exit.
-        const char* what = ex.what();
-        std::cerr << what << std::endl;
-        delete what;
-
+        std::cerr << ex.what() << std::endl;
         return 1;
     }
 

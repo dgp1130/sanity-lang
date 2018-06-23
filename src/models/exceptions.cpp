@@ -16,16 +16,11 @@ const char* AssertionException::what() const noexcept {
     return this->reason.c_str();
 }
 
-FileNotFoundException::FileNotFoundException(const std::string& filePath) : filePath(filePath) { }
+FileNotFoundException::FileNotFoundException(const std::string& filePath)
+        : message(std::string("File not found: ") + filePath) { }
 
 const char* FileNotFoundException::what() const noexcept {
-    const std::string message = std::string("File not found: ") + this->filePath;
-
-    // Copy the string to heap memory so it can be returned.
-    auto cstring = new char[message.size()];
-    strcpy(cstring, message.c_str());
-
-    return cstring;
+    return this->message.c_str();
 }
 
 IllegalStateException::IllegalStateException(const std::string& reason) : reason(reason) { }
@@ -40,18 +35,14 @@ const char* ParseException::what() const noexcept {
     return this->message.c_str();
 }
 
-SyntaxException::SyntaxException(const std::string& message, const int line, const int startCol, const int endCol)
-    : message(message), line(line), startCol(startCol), endCol(endCol) { }
+SyntaxException::SyntaxException(const std::string& message, const int line, const int startCol, const int endCol) {
+    std::ostringstream ss;
+    ss << "Syntax exception (line " << line << ", col " << startCol << " -> " << endCol << "): " << message;
+    this->message = ss.str();
+}
 
 const char* SyntaxException::what() const noexcept {
-    std::ostringstream ss;
-    ss << "Syntax exception (line " << this->line << ", col " << this->startCol << " -> " << this->endCol << "): "
-        << this->message;
-    const std::string message = ss.str();
-    auto cstring = new char[message.size()];
-    strcpy(cstring, message.c_str());
-
-    return cstring;
+    return this->message.c_str();
 }
 
 TypeException::TypeException(const std::string& message) : message(message) { }
