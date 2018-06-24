@@ -200,7 +200,7 @@ public class Elsewhere {
 ```
 
 What if one day we decided that constructing a new `Model` is expensive, and we should
-cache all existing ones and resue them as necessary? This is painless to do, does not
+cache all existing ones and reuse them as necessary? This is painless to do, does not
 require changes to `Elsewhere` and needed no foresight at the time we initially wrote
 `Model`!
 
