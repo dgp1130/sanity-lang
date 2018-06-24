@@ -158,7 +158,7 @@ let mapper: (number: int) -> string = number.toString();
 
 // Multi-line lambdas can use a block syntax.
 let complexMapper: (number: int) -> string = {
-    let incremented = number + 1;
+    let incremented := number + 1;
     return incremented.toString();
 };
 
