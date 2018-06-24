@@ -91,12 +91,14 @@ However, if you wish to return early, you should use `return;` without `this`. W
 Many languages fix specific parts of these issues. Dart has named constructors. JavaScript
 allows other statements before a `super()` call provided they don't access `this`. C# uses
 a `: base()` syntax to pull the `super()` call out of the body of the function, which is
-more intuitive. Kotlin omits the `new` operator. These all improve things slightly, but
-don't change the underlying functionality of constructors and the inheritance hierarchy
-model, particularly in the direct coupling of a subclass' construction to that of its
-superclass. I am asserting that the this core concept of constructors is flawed and can be
-done better. **Constructors are a fundamentally broken mechanism for instantiating objects.**
-I believe this can be done better in a far simpler and more flexible fashion.
+more intuitive. C++ uses initializer lists to set `const` fields, which can make more
+syntactic sense even if it is no more flexible than Java. Kotlin omits the `new` operator.
+These all improve things slightly, but don't change the underlying functionality of
+constructors and the inheritance hierarchy model, particularly in the direct coupling of a
+subclass' construction to that of its superclass. I am asserting that the this core concept
+of constructors is flawed and can be done better. **Constructors are a fundamentally broken
+mechanism for instantiating objects.** I believe this can be done better in a far simpler
+and more flexible fashion.
 
 ## Constructor Solution
 
