@@ -189,7 +189,7 @@ startTrip(roadtrip);
 // Anonymous object types provide a named argument solution, where the values can be
 // provided individually.
 let friendsCar: Car = new Car();
-let friend: PErson = new Person();
+let friend: Person = new Person();
 startTrip({car = friendsCar, driver = friend});
 ```
 
