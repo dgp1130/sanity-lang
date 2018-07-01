@@ -1,3 +1,4 @@
+#include <gflags/gflags.h>
 #include <iostream>
 #include <memory>
 #include <queue>
@@ -27,17 +28,19 @@ typedef Exceptions::SyntaxException SyntaxException;
 typedef Exceptions::TypeException TypeException;
 typedef Exceptions::UndeclaredException UndeclaredException;
 
-int main(const int argc, const char* argv[]) {
-    // Validate arguments.
-    if (argc < 2) {
-        std::cerr << "Please provide a Sanity source file to compile." << std::endl;
-        return 1;
-    }
+DEFINE_string(input, "-", "Path to a file of Sanity source code to compile or \"-\" to use stdin.");
+
+int main(int argc, char* argv[]) {
+    const auto progName = std::string(argv[0]);
+    gflags::SetUsageMessage("Compiles Sanity source code to LLVM IR.\n$ cat <source>.sane | " + progName + " | lli");
+    gflags::ParseCommandLineFlags(&argc, &argv, true /* remove flags from argv */);
+
+    const auto inputFile = FLAGS_input != "-" ? FLAGS_input : "/dev/stdin";
 
     // Read file into a queue of characters.
     std::queue<char> chars;
     try {
-        chars = FileUtils::readFileChars(argv[1]);
+        chars = FileUtils::readFileChars(inputFile);
     } catch (const FileNotFoundException& ex) {
         std::cerr << ex.what() << std::endl;
         return 1;
