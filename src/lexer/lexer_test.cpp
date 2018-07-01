@@ -59,7 +59,7 @@ TEST(Lexer, TokenizesNumbers) {
     ASSERT_EQ("test", second->source);
 }
 
-TEST(Lexer, TokenizesCharacters) {
+TEST(Lexer, TokenizesCharacterLiterals) {
     std::queue<char> q = QueueUtils::queueify("\'a\'");
     std::queue<std::shared_ptr<const Token>> tokens = Lexer::tokenize(q);
 
@@ -69,6 +69,18 @@ TEST(Lexer, TokenizesCharacters) {
     tokens.pop();
     ASSERT_EQ("a", token->source);
     ASSERT_EQ(true, token->isCharLiteral);
+}
+
+TEST(Lexer, TokenizesIntegerLiterals) {
+    std::queue<char> q = QueueUtils::queueify("1234");
+    std::queue<std::shared_ptr<const Token>> tokens = Lexer::tokenize(q);
+
+    ASSERT_EQ(1, tokens.size());
+
+    std::shared_ptr<const Token> token = tokens.front();
+    tokens.pop();
+    ASSERT_EQ("1234", token->source);
+    ASSERT_EQ(true, token->isIntegerLiteral);
 }
 
 TEST(Lexer, TokenizingInvalidCharactersThrowsSyntaxException) {

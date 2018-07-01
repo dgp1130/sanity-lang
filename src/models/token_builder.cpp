@@ -25,7 +25,12 @@ TokenBuilder TokenBuilder::setCharLiteral(bool isCharLiteral){
     return *this;
 }
 
+TokenBuilder TokenBuilder::setIntegerLiteral(bool isIntegerLiteral) {
+    this->isIntegerLiteral = isIntegerLiteral;
+    return *this;
+}
+
 std::shared_ptr<const Token> TokenBuilder::build() {
     return std::make_shared<const Token>(Token(this->source, this->line, this->startCol, this->endCol,
-        this->isCharLiteral));
+        this->isCharLiteral, this->isIntegerLiteral));
 }

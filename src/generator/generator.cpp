@@ -24,6 +24,20 @@ typedef Exceptions::UndeclaredException UndeclaredException;
 const int CHAR_BIT_SIZE = 32; // putchar() uses int32 rather than int8.
 const int INTEGER_BIT_SIZE = 32;
 
+llvm::Value* Generator::generate(const AST::AddOpExpression& addition) {
+    llvm::Value* left = addition.leftExpr->generate(*this);
+    llvm::Value* right = addition.rightExpr->generate(*this);
+
+    return builder.CreateAdd(left, right, "addtmp");
+}
+
+llvm::Value* Generator::generate(const AST::SubOpExpression& subtraction) {
+    llvm::Value* left = subtraction.leftExpr->generate(*this);
+    llvm::Value* right = subtraction.rightExpr->generate(*this);
+
+    return builder.CreateSub(left, right, "subtmp");
+}
+
 llvm::IntegerType* Generator::generate(const AST::IntegerType& integer) {
     return llvm::IntegerType::getInt32Ty(*context);
 }
@@ -81,7 +95,12 @@ llvm::Function* Generator::generate(const AST::File& file) {
 }
 
 llvm::Value* Generator::generate(const AST::CharLiteral& literal) {
-    llvm::APInt llvmInt(CHAR_BIT_SIZE, (uint32_t) literal.value, true /* signed */);
+    llvm::APInt llvmInt(CHAR_BIT_SIZE, (uint64_t) literal.value, true /* signed */);
+    return llvm::ConstantInt::get(*context, llvmInt);
+}
+
+llvm::Value* Generator::generate(const AST::IntegerLiteral& literal) {
+    llvm::APInt llvmInt(INTEGER_BIT_SIZE, (uint64_t) literal.value, true /* signed */);
     return llvm::ConstantInt::get(*context, llvmInt);
 }
 

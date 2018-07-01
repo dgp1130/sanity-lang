@@ -68,6 +68,40 @@ TEST(Parser, ThrowsParseExceptionOnExternsStatementWithNoType) {
     ASSERT_THROW(Parser::parse(input), ParseException);
 }
 
+TEST(Parser, ParsesAdditionOperation) {
+    std::shared_ptr<const Token> tokens[] = {
+        TokenBuilder("1").setIntegerLiteral(true).build(),
+        TokenBuilder("+").build(),
+        TokenBuilder("2").setIntegerLiteral(true).build(),
+        TokenBuilder(";").build(),
+    };
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 4 /* length */);
+
+    std::shared_ptr<const AST::File> file = Parser::parse(input);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    file->print(ss);
+    ASSERT_EQ("1 + 2;\n", ss.str());
+}
+
+TEST(Parser, ParsesSubtractionOperation) {
+    std::shared_ptr<const Token> tokens[] = {
+        TokenBuilder("2").setIntegerLiteral(true).build(),
+        TokenBuilder("-").build(),
+        TokenBuilder("1").setIntegerLiteral(true).build(),
+        TokenBuilder(";").build(),
+    };
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 4 /* length */);
+
+    std::shared_ptr<const AST::File> file = Parser::parse(input);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    file->print(ss);
+    ASSERT_EQ("2 - 1;\n", ss.str());
+}
+
 TEST(Parser, ParsesSingleFunctionCall) {
     std::shared_ptr<const Token> tokens[] = {
         TokenBuilder("test").build(),
@@ -118,6 +152,21 @@ TEST(Parser, ParsesSingleCharLiteralStatement) {
     llvm::raw_string_ostream ss(str);
     file->print(ss);
     ASSERT_EQ("\'a\';\n", ss.str());
+}
+
+TEST(Parser, ParsesSingleIntegerLiteralStatement) {
+    std::shared_ptr<const Token> tokens[] = {
+        TokenBuilder("1234").setIntegerLiteral(true).build(),
+        TokenBuilder(";").build(),
+    };
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 2 /* length */);
+
+    std::shared_ptr<const AST::File> file = Parser::parse(input);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    file->print(ss);
+    ASSERT_EQ("1234;\n", ss.str());
 }
 
 TEST(Parser, ParsesMultipleStatements) {

@@ -16,9 +16,10 @@ private:
 
     explicit Parser(std::queue<std::shared_ptr<const Token>>& tokens);
 
-    std::shared_ptr<const Token> match(const std::function<bool (std::shared_ptr<const Token>)>& matcher,
+    std::shared_ptr<const Token> match(const std::function<bool (std::shared_ptr<const Token>&)>& matcher,
         const std::string& errMsg);
     std::shared_ptr<const Token> match(const std::string& expected);
+    std::shared_ptr<const Token> match();
 
     std::shared_ptr<const AST::File> file();
     std::shared_ptr<const AST::Function> externDecl();
@@ -26,8 +27,11 @@ private:
     std::shared_ptr<const AST::Type> type();
     std::shared_ptr<const AST::FunctionPrototype> funcType();
     std::shared_ptr<const AST::Expression> expression();
+    std::shared_ptr<const AST::Expression> exprAddSub();
+    std::shared_ptr<const AST::Expression> exprLeaf();
     std::shared_ptr<const AST::FunctionCall> functionCall();
     std::shared_ptr<const AST::CharLiteral> charLiteral();
+    std::shared_ptr<const AST::IntegerLiteral> integerLiteral();
 
 public:
     /**

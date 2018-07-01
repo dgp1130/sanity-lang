@@ -8,13 +8,14 @@
 #include "../models/globals.h"
 #include "llvm/IR/Type.h"
 
+typedef Exceptions::AssertionException AssertionException;
 typedef Exceptions::ParseException ParseException;
 
 Parser::Parser(std::queue<std::shared_ptr<const Token>>& tokens) {
     this->tokens = tokens;
 }
 
-std::shared_ptr<const Token> Parser::match(const std::function<bool (std::shared_ptr<const Token>)>& matcher,
+std::shared_ptr<const Token> Parser::match(const std::function<bool (std::shared_ptr<const Token>&)>& matcher,
         const std::string& expected) {
     if (this->tokens.empty()) {
         throw ParseException("Expected \"" + expected + "\", but got EOF.");
@@ -34,8 +35,12 @@ std::shared_ptr<const Token> Parser::match(const std::function<bool (std::shared
 };
 
 std::shared_ptr<const Token> Parser::match(const std::string& expected) {
-    return this->match([&expected](std::shared_ptr<const Token> token) { return token->source == expected; }, expected);
+    return this->match([&expected](std::shared_ptr<const Token>& token) { return token->source == expected; }, expected);
 };
+
+std::shared_ptr<const Token> Parser::match() {
+    return this->match([](std::shared_ptr<const Token>& token) { return true; }, "ShouldNeverPrint");
+}
 
 // <file> ::= <externDecl> <block>
 //          | <statement> <block>
@@ -114,13 +119,44 @@ std::shared_ptr<const AST::FunctionPrototype> Parser::funcType() {
     return std::make_shared<AST::FunctionPrototype>(AST::FunctionPrototype(parameters, returnType));
 }
 
-// <expression> ::= <function-call>
-//                | <char-literal>
+// <expression> ::= <expr-add-sub>
 std::shared_ptr<const AST::Expression> Parser::expression() {
+    return this->exprAddSub();
+}
+
+// <expr-add-sub> ::= <expr-leaf> <expr-add-sub'>
+// <expr-add-sub'> ::= + <expr-leaf> <expr-add-sub'>
+//                   | - <expr-leaf> <expr-add-sub'>
+//                   | ø
+std::shared_ptr<const AST::Expression> Parser::exprAddSub() {
+    std::shared_ptr<const AST::Expression> leftExpr = this->exprLeaf();
+
+    while (!this->tokens.empty() && (this->tokens.front()->source == "+" || this->tokens.front()->source == "-")) {
+        const std::shared_ptr<const Token> op = this->match();
+        const std::shared_ptr<const AST::Expression> rightExpr = this->exprLeaf();
+
+        if (op->source == "+") {
+            leftExpr = std::make_shared<const AST::AddOpExpression>(AST::AddOpExpression(leftExpr, rightExpr));
+        } else if (op->source == "-") {
+            leftExpr = std::make_shared<const AST::SubOpExpression>(AST::SubOpExpression(leftExpr, rightExpr));
+        } else {
+            throw AssertionException("Expected operator + or -, but got " + op->source);
+        }
+    }
+
+    return leftExpr;
+}
+
+// <expr-leaf> ::= <function-call>
+//               | <char-literal>
+//               | <integer-literal>
+std::shared_ptr<const AST::Expression> Parser::exprLeaf() {
     if (this->tokens.empty()) throw ParseException("Expected an expression, but got EOF.");
 
     if (this->tokens.front()->isCharLiteral) {
         return this->charLiteral();
+    } else if (this->tokens.front()->isIntegerLiteral) {
+        return this->integerLiteral();
     } else {
         return this->functionCall();
     }
@@ -157,7 +193,15 @@ std::shared_ptr<const AST::CharLiteral> Parser::charLiteral() {
         return token->isCharLiteral;
     }, "char literal");
 
-    return std::make_shared<AST::CharLiteral>(AST::CharLiteral(literal));
+    return std::make_shared<const AST::CharLiteral>(AST::CharLiteral(literal));
+}
+
+std::shared_ptr<const AST::IntegerLiteral> Parser::integerLiteral() {
+    const std::shared_ptr<const Token> literal = this->match([](std::shared_ptr<const Token> token) {
+        return token->isIntegerLiteral;
+    }, "integer literal");
+
+    return std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(literal));
 }
 
 std::shared_ptr<const AST::File> Parser::parse(std::queue<std::shared_ptr<const Token>>& tokens) {

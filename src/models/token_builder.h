@@ -16,6 +16,7 @@ private:
     int startCol = -1;
     int endCol = -1;
     bool isCharLiteral = false;
+    bool isIntegerLiteral = false;
 
 public:
     explicit TokenBuilder(const std::string& source);
@@ -27,6 +28,8 @@ public:
     TokenBuilder setEndCol(int col);
 
     TokenBuilder setCharLiteral(bool isCharLiteral);
+
+    TokenBuilder setIntegerLiteral(bool isIntegerLiteral);
 
     std::shared_ptr<const Token> build();
 };

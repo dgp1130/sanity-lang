@@ -39,3 +39,13 @@ TEST(Token, SavesCharLiteralState) {
     const auto nonCharToken = TokenBuilder("test").build();
     ASSERT_FALSE(nonCharToken->isCharLiteral);
 }
+
+TEST(Token, SavesIntegerLiteralState) {
+    const auto intToken = TokenBuilder("1234")
+        .setIntegerLiteral(true)
+    .build();
+    ASSERT_TRUE(intToken->isIntegerLiteral);
+
+    const auto nonIntToken = TokenBuilder("test").build();
+    ASSERT_FALSE(nonIntToken->isIntegerLiteral);
+}

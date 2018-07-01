@@ -25,6 +25,35 @@ namespace AST {
         virtual llvm::Value* generate(Generator& generator) const = 0;
     };
 
+    class BinaryOpExpression : public Expression {
+    public:
+        std::shared_ptr<const AST::Expression> leftExpr;
+        std::shared_ptr<const AST::Expression> rightExpr;
+
+        BinaryOpExpression(std::shared_ptr<const AST::Expression> leftExpr,
+                std::shared_ptr<const AST::Expression> rightExpr);
+    };
+
+    class AddOpExpression : public BinaryOpExpression {
+    public:
+        AddOpExpression(std::shared_ptr<const AST::Expression> leftExpr,
+                std::shared_ptr<const AST::Expression> rightExpr);
+
+        llvm::Value* generate(Generator& generator) const override;
+
+        void print(llvm::raw_ostream& stream) const override;
+    };
+
+    class SubOpExpression : public BinaryOpExpression {
+    public:
+        SubOpExpression(std::shared_ptr<const AST::Expression> leftExpr,
+                std::shared_ptr<const AST::Expression> rightExpr);
+
+        llvm::Value* generate(Generator& generator) const override;
+
+        void print(llvm::raw_ostream& stream) const override;
+    };
+
     class Type : public Element {
     public:
         virtual llvm::Type* generate(Generator& generator) const = 0;
@@ -92,6 +121,17 @@ namespace AST {
         const char value;
 
         explicit CharLiteral(std::shared_ptr<const Token> value);
+
+        llvm::Value* generate(Generator& generator) const override;
+
+        void print(llvm::raw_ostream& stream) const override;
+    };
+
+    class IntegerLiteral : public Expression {
+    public:
+        const int32_t value;
+
+        explicit IntegerLiteral(std::shared_ptr<const Token> value);
 
         llvm::Value* generate(Generator& generator) const override;
 

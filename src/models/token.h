@@ -10,12 +10,13 @@ public:
     const int startCol;
     const int endCol;
     const bool isCharLiteral;
+    const bool isIntegerLiteral;
 
     /**
      * Construct a Token with the given values. This API kind of sucks, so use TokenBuilder instead.
      * @see TokenBuilder
      */
-    Token(const std::string& source, int line, int startCol, int endCol, bool isCharLiteral);
+    Token(const std::string& source, int line, int startCol, int endCol, bool isCharLiteral, bool isIntegerLiteral);
 
     friend std::ostream& operator<<(std::ostream&, const Token&);
 };

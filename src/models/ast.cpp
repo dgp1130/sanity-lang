@@ -4,6 +4,38 @@
 #include "../generator/generator.h"
 #include "llvm/Support/raw_ostream.h"
 
+AST::BinaryOpExpression::BinaryOpExpression(std::shared_ptr<const AST::Expression> leftExpr,
+        std::shared_ptr<const AST::Expression> rightExpr)
+    : leftExpr(std::move(leftExpr)), rightExpr(std::move(rightExpr)) { }
+
+AST::AddOpExpression::AddOpExpression(std::shared_ptr<const AST::Expression> leftExpr,
+        std::shared_ptr<const AST::Expression> rightExpr)
+    : BinaryOpExpression(std::move(leftExpr), std::move(rightExpr)) { }
+
+void AST::AddOpExpression::print(llvm::raw_ostream& stream) const {
+    this->leftExpr->print(stream);
+    stream << " + ";
+    this->rightExpr->print(stream);
+}
+
+llvm::Value* AST::AddOpExpression::generate(Generator& generator) const {
+    return generator.generate(*this);
+}
+
+AST::SubOpExpression::SubOpExpression(std::shared_ptr<const AST::Expression> leftExpr,
+        std::shared_ptr<const AST::Expression> rightExpr)
+        : BinaryOpExpression(std::move(leftExpr), std::move(rightExpr)) { }
+
+llvm::Value* AST::SubOpExpression::generate(Generator& generator) const {
+    return generator.generate(*this);
+}
+
+void AST::SubOpExpression::print(llvm::raw_ostream& stream) const {
+    this->leftExpr->print(stream);
+    stream << " - ";
+    this->rightExpr->print(stream);
+}
+
 void AST::IntegerType::print(llvm::raw_ostream& stream) const {
     stream << "int";
 }
@@ -83,6 +115,16 @@ llvm::Value* AST::CharLiteral::generate(Generator& generator) const {
 
 void AST::CharLiteral::print(llvm::raw_ostream& stream) const {
     stream << "\'" << this->value << "\'";
+}
+
+AST::IntegerLiteral::IntegerLiteral(std::shared_ptr<const Token> value) : value(std::stoi(value->source)) { }
+
+llvm::Value* AST::IntegerLiteral::generate(Generator& generator) const {
+    return generator.generate(*this);
+}
+
+void AST::IntegerLiteral::print(llvm::raw_ostream& stream) const {
+    stream << this->value;
 }
 
 AST::FunctionCall::FunctionCall(std::shared_ptr<const Token> callee,

@@ -5,6 +5,32 @@
 #include "token_builder.h"
 #include "llvm/Support/raw_ostream.h"
 
+TEST(AST, AddOpExpressionPrints) {
+    const auto leftValue = TokenBuilder("1").setIntegerLiteral(true).build();
+    const auto leftExpr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(leftValue));
+    const auto rightValue = TokenBuilder("2").setIntegerLiteral(true).build();
+    const auto rightExpr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(rightValue));
+    const auto addition = AST::AddOpExpression(leftExpr, rightExpr);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    addition.print(ss);
+    ASSERT_EQ("1 + 2", ss.str());
+}
+
+TEST(AST, SubOpExpressionPrints) {
+    const auto leftValue = TokenBuilder("2").setIntegerLiteral(true).build();
+    const auto leftExpr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(leftValue));
+    const auto rightValue = TokenBuilder("1").setIntegerLiteral(true).build();
+    const auto rightExpr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(rightValue));
+    const auto subtraction = AST::SubOpExpression(leftExpr, rightExpr);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    subtraction.print(ss);
+    ASSERT_EQ("2 - 1", ss.str());
+}
+
 TEST(AST, IntegerTypePrints) {
     const auto integer = AST::IntegerType();
 
@@ -86,6 +112,21 @@ TEST(AST, CharLiteralPrints) {
     llvm::raw_string_ostream ss(str);
     literal.print(ss);
     ASSERT_EQ("\'a\'", ss.str());
+}
+
+TEST(AST, IntegerLiteralParsesToInteger) {
+    std::shared_ptr<const Token> token = TokenBuilder("1234").setIntegerLiteral(true).build();
+    ASSERT_EQ(1234, AST::IntegerLiteral(token).value);
+}
+
+TEST(AST, IntegerLiteralPrints) {
+    std::shared_ptr<const Token> token = TokenBuilder("1234").setIntegerLiteral(true).build();
+    const auto literal = AST::IntegerLiteral(token);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    literal.print(ss);
+    ASSERT_EQ("1234", ss.str());
 }
 
 TEST(AST, FunctionCallPrints) {

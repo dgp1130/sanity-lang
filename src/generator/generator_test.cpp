@@ -4,6 +4,30 @@
 #include "../models/token_builder.h"
 #include "../models/globals.h"
 
+TEST(Generator, GeneratesAddOpExpression) {
+    const auto leftValue = TokenBuilder("1").setIntegerLiteral(true).build();
+    const auto leftExpr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(leftValue));
+    const auto rightValue = TokenBuilder("2").setIntegerLiteral(true).build();
+    const auto rightExpr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(rightValue));
+    const auto addition = AST::AddOpExpression(leftExpr, rightExpr);
+
+    const llvm::Value* sum = Generator().generate(addition);
+
+    ASSERT_EQ((int64_t) 3, ((llvm::ConstantInt*) sum)->getSExtValue());
+}
+
+TEST(Generator, GeneratesSubOpExpression) {
+    const auto leftValue = TokenBuilder("2").setIntegerLiteral(true).build();
+    const auto leftExpr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(leftValue));
+    const auto rightValue = TokenBuilder("1").setIntegerLiteral(true).build();
+    const auto rightExpr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(rightValue));
+    const auto subtraction = AST::SubOpExpression(leftExpr, rightExpr);
+
+    const llvm::Value* difference = Generator().generate(subtraction);
+
+    ASSERT_EQ((int64_t) 1, ((llvm::ConstantInt*) difference)->getSExtValue());
+}
+
 TEST(Generator, GeneratesIntegerType) {
     const llvm::IntegerType* integer = Generator().generate(AST::IntegerType());
 
@@ -77,6 +101,14 @@ TEST(Generator, GeneratesCharLiteral) {
     auto generated = (llvm::ConstantInt*) Generator().generate(charLiteral);
 
     ASSERT_EQ((int64_t) 'a', generated->getValue().getSExtValue());
+}
+
+TEST(Generator, GeneratesIntegerLiteral) {
+    const std::shared_ptr<const Token> token = TokenBuilder("1234").setIntegerLiteral(true).build();
+    const auto integerLiteral = AST::IntegerLiteral(token);
+    auto generated = (llvm::ConstantInt*) Generator().generate(integerLiteral);
+
+    ASSERT_EQ((int64_t) 1234, generated->getValue().getSExtValue());
 }
 
 TEST(Generator, GeneratesFunctionCall) {

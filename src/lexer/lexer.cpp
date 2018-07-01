@@ -57,7 +57,9 @@ std::queue<std::shared_ptr<const Token>> Lexer::tokenize(std::queue<char>& chars
         })->match(std::regex("^[a-zA-Z_]"), 1, [](Stream* stream) {
             stream->consumeWhile(std::regex("^[a-zA-Z0-9_]"), 1)->returnToken();
         })->match(std::regex("^[0-9]"), 1, [](Stream* stream) {
-            stream->consumeWhile(std::regex("^[0-9]"), 1)->returnToken();
+            stream->consumeWhile(std::regex("^[0-9]"), 1)->returnToken([](const std::string& source) {
+                return TokenBuilder(source).setIntegerLiteral(true);
+            });
         })->match(std::regex("^\'"), 1, [](Stream* stream) {
             stream->ignore(/* open quote */)->match(std::regex("^\\\\"), 1, [](Stream* stream) { // Then
                 stream->consume(/* backslash */)->consume(/* control character */);
