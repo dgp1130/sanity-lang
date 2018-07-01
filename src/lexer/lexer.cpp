@@ -69,7 +69,7 @@ std::queue<std::shared_ptr<const Token>> Lexer::tokenize(std::queue<char>& chars
                     return TokenBuilder(std::string(1, escapedSource)).setCharLiteral(true);
                 });
             }, [](Stream* stream) { // Else
-                stream->throwException("Expected character to end with a close quote.");
+                stream->throwException("Expected character literal to end with a close quote.");
             });
         })->match(std::regex("^->"), 2, [](Stream* stream) {
             stream->consume(2 /* -> */)->returnToken();
