@@ -158,7 +158,7 @@ let mapper: (number: int) -> string = number.toString();
 
 // Multi-line lambdas can use a block syntax.
 let complexMapper: (number: int) -> string = {
-    let incremented = number + 1;
+    let incremented := number + 1;
     return incremented.toString();
 };
 
@@ -189,7 +189,7 @@ startTrip(roadtrip);
 // Anonymous object types provide a named argument solution, where the values can be
 // provided individually.
 let friendsCar: Car = new Car();
-let friend: PErson = new Person();
+let friend: Person = new Person();
 startTrip({car = friendsCar, driver = friend});
 ```
 
