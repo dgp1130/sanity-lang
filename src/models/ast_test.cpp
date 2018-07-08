@@ -15,7 +15,7 @@ TEST(AST, AddOpExpressionPrints) {
     std::string str;
     llvm::raw_string_ostream ss(str);
     addition.print(ss);
-    ASSERT_EQ("1 + 2", ss.str());
+    ASSERT_EQ("(1) + (2)", ss.str());
 }
 
 TEST(AST, SubOpExpressionPrints) {
@@ -28,7 +28,33 @@ TEST(AST, SubOpExpressionPrints) {
     std::string str;
     llvm::raw_string_ostream ss(str);
     subtraction.print(ss);
-    ASSERT_EQ("2 - 1", ss.str());
+    ASSERT_EQ("(2) - (1)", ss.str());
+}
+
+TEST(AST, MulOpExpressionPrints) {
+    const auto leftValue = TokenBuilder("1").setIntegerLiteral(true).build();
+    const auto leftExpr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(leftValue));
+    const auto rightValue = TokenBuilder("2").setIntegerLiteral(true).build();
+    const auto rightExpr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(rightValue));
+    const auto multiplication = AST::MulOpExpression(leftExpr, rightExpr);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    multiplication.print(ss);
+    ASSERT_EQ("(1) * (2)", ss.str());
+}
+
+TEST(AST, DivOpExpressionPrints) {
+    const auto leftValue = TokenBuilder("2").setIntegerLiteral(true).build();
+    const auto leftExpr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(leftValue));
+    const auto rightValue = TokenBuilder("1").setIntegerLiteral(true).build();
+    const auto rightExpr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(rightValue));
+    const auto division = AST::DivOpExpression(leftExpr, rightExpr);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    division.print(ss);
+    ASSERT_EQ("(2) / (1)", ss.str());
 }
 
 TEST(AST, IntegerTypePrints) {

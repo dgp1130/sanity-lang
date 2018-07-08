@@ -38,6 +38,20 @@ llvm::Value* Generator::generate(const AST::SubOpExpression& subtraction) {
     return builder.CreateSub(left, right, "subtmp");
 }
 
+llvm::Value* Generator::generate(const AST::MulOpExpression& multiplication) {
+    llvm::Value* left = multiplication.leftExpr->generate(*this);
+    llvm::Value* right = multiplication.rightExpr->generate(*this);
+
+    return builder.CreateMul(left, right, "multmp");
+}
+
+llvm::Value* Generator::generate(const AST::DivOpExpression& division) {
+    llvm::Value* left = division.leftExpr->generate(*this);
+    llvm::Value* right = division.rightExpr->generate(*this);
+
+    return builder.CreateSDiv(left, right, "divtmp");
+}
+
 llvm::IntegerType* Generator::generate(const AST::IntegerType& integer) {
     return llvm::IntegerType::getInt32Ty(*context);
 }

@@ -28,6 +28,8 @@ private:
     std::shared_ptr<const AST::FunctionPrototype> funcType();
     std::shared_ptr<const AST::Expression> expression();
     std::shared_ptr<const AST::Expression> exprAddSub();
+    std::shared_ptr<const AST::Expression> exprMulDiv();
+    std::shared_ptr<const AST::Expression> exprParen();
     std::shared_ptr<const AST::Expression> exprLeaf();
     std::shared_ptr<const AST::FunctionCall> functionCall();
     std::shared_ptr<const AST::CharLiteral> charLiteral();

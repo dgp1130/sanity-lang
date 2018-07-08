@@ -28,6 +28,42 @@ TEST(Generator, GeneratesSubOpExpression) {
     ASSERT_EQ((int64_t) 1, ((llvm::ConstantInt*) difference)->getSExtValue());
 }
 
+TEST(Generator, GeneratesMulOpExpression) {
+    const auto leftValue = TokenBuilder("2").setIntegerLiteral(true).build();
+    const auto leftExpr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(leftValue));
+    const auto rightValue = TokenBuilder("3").setIntegerLiteral(true).build();
+    const auto rightExpr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(rightValue));
+    const auto multiplication = AST::MulOpExpression(leftExpr, rightExpr);
+
+    const llvm::Value* product = Generator().generate(multiplication);
+
+    ASSERT_EQ((int64_t) 6, ((llvm::ConstantInt*) product)->getSExtValue());
+}
+
+TEST(Generator, GeneratesDivOpExpression) {
+    const auto leftValue = TokenBuilder("6").setIntegerLiteral(true).build();
+    const auto leftExpr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(leftValue));
+    const auto rightValue = TokenBuilder("3").setIntegerLiteral(true).build();
+    const auto rightExpr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(rightValue));
+    const auto division = AST::DivOpExpression(leftExpr, rightExpr);
+
+    const llvm::Value* quotient = Generator().generate(division);
+
+    ASSERT_EQ((int64_t) 2, ((llvm::ConstantInt*) quotient)->getSExtValue());
+}
+
+TEST(Generator, GeneratesFlooredDivExpression) {
+    const auto leftValue = TokenBuilder("8").setIntegerLiteral(true).build();
+    const auto leftExpr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(leftValue));
+    const auto rightValue = TokenBuilder("3").setIntegerLiteral(true).build();
+    const auto rightExpr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(rightValue));
+    const auto division = AST::DivOpExpression(leftExpr, rightExpr);
+
+    const llvm::Value* quotient = Generator().generate(division);
+
+    ASSERT_EQ((int64_t) 2, ((llvm::ConstantInt*) quotient)->getSExtValue());
+}
+
 TEST(Generator, GeneratesIntegerType) {
     const llvm::IntegerType* integer = Generator().generate(AST::IntegerType());
 

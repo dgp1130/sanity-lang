@@ -68,38 +68,107 @@ TEST(Parser, ThrowsParseExceptionOnExternsStatementWithNoType) {
     ASSERT_THROW(Parser::parse(input), ParseException);
 }
 
-TEST(Parser, ParsesAdditionOperation) {
+TEST(Parser, ParsesAdditionOperationLeftToRight) {
     std::shared_ptr<const Token> tokens[] = {
         TokenBuilder("1").setIntegerLiteral(true).build(),
         TokenBuilder("+").build(),
         TokenBuilder("2").setIntegerLiteral(true).build(),
+        TokenBuilder("+").build(),
+        TokenBuilder("3").setIntegerLiteral(true).build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 4 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 6 /* length */);
 
     std::shared_ptr<const AST::File> file = Parser::parse(input);
 
     std::string str;
     llvm::raw_string_ostream ss(str);
     file->print(ss);
-    ASSERT_EQ("1 + 2;\n", ss.str());
+    ASSERT_EQ("((1) + (2)) + (3);\n", ss.str());
 }
 
-TEST(Parser, ParsesSubtractionOperation) {
+TEST(Parser, ParsesSubtractionOperationLeftToRight) {
     std::shared_ptr<const Token> tokens[] = {
+        TokenBuilder("3").setIntegerLiteral(true).build(),
+        TokenBuilder("-").build(),
         TokenBuilder("2").setIntegerLiteral(true).build(),
         TokenBuilder("-").build(),
         TokenBuilder("1").setIntegerLiteral(true).build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 4 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 6 /* length */);
 
     std::shared_ptr<const AST::File> file = Parser::parse(input);
 
     std::string str;
     llvm::raw_string_ostream ss(str);
     file->print(ss);
-    ASSERT_EQ("2 - 1;\n", ss.str());
+    ASSERT_EQ("((3) - (2)) - (1);\n", ss.str());
+}
+
+TEST(Parser, ParsesMultiplicationOperationLeftToRight) {
+    std::shared_ptr<const Token> tokens[] = {
+        TokenBuilder("1").setIntegerLiteral(true).build(),
+        TokenBuilder("*").build(),
+        TokenBuilder("2").setIntegerLiteral(true).build(),
+        TokenBuilder("*").build(),
+        TokenBuilder("3").setIntegerLiteral(true).build(),
+        TokenBuilder(";").build(),
+    };
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 6 /* length */);
+
+    std::shared_ptr<const AST::File> file = Parser::parse(input);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    file->print(ss);
+    ASSERT_EQ("((1) * (2)) * (3);\n", ss.str());
+}
+
+TEST(Parser, ParsesDivisionOperationLeftToRight) {
+    std::shared_ptr<const Token> tokens[] = {
+        TokenBuilder("3").setIntegerLiteral(true).build(),
+        TokenBuilder("/").build(),
+        TokenBuilder("2").setIntegerLiteral(true).build(),
+        TokenBuilder("/").build(),
+        TokenBuilder("1").setIntegerLiteral(true).build(),
+        TokenBuilder(";").build(),
+    };
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 6 /* length */);
+
+    std::shared_ptr<const AST::File> file = Parser::parse(input);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    file->print(ss);
+    ASSERT_EQ("((3) / (2)) / (1);\n", ss.str());
+}
+
+TEST(Parser, RespectsOrderOfOperations) {
+    std::shared_ptr<const Token> tokens[] = {
+        TokenBuilder("1").setIntegerLiteral(true).build(),
+        TokenBuilder("+").build(),
+        TokenBuilder("2").setIntegerLiteral(true).build(),
+        TokenBuilder("*").build(),
+        TokenBuilder("3").setIntegerLiteral(true).build(),
+        TokenBuilder("-").build(),
+        TokenBuilder("4").setIntegerLiteral(true).build(),
+        TokenBuilder("/").build(),
+        TokenBuilder("(").build(),
+        TokenBuilder("5").setIntegerLiteral(true).build(),
+        TokenBuilder("+").build(),
+        TokenBuilder("6").setIntegerLiteral(true).build(),
+        TokenBuilder(")").build(),
+        TokenBuilder(";").build(),
+    };
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 14 /* length */);
+
+    std::shared_ptr<const AST::File> file = Parser::parse(input);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    file->print(ss);
+    ASSERT_EQ("((1) + ((2) * (3))) - ((4) / ((5) + (6)));\n", ss.str());
 }
 
 TEST(Parser, ParsesSingleFunctionCall) {
@@ -241,6 +310,17 @@ TEST(Parser, ThrowsParseExceptionOnUnexpectedEOF) {
         // EOF
     };
     std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 2 /* length */);
+
+    ASSERT_THROW(Parser::parse(input), ParseException);
+}
+
+TEST(Parser, ThrowsPareExceptionOnUnmatchedParen) {
+    std::shared_ptr<const Token> tokens[] = {
+        TokenBuilder("(").build(),
+        TokenBuilder("1").setIntegerLiteral(true).build(),
+        TokenBuilder(";").build(),
+    };
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 3 /* length */);
 
     ASSERT_THROW(Parser::parse(input), ParseException);
 }

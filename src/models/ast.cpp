@@ -13,9 +13,11 @@ AST::AddOpExpression::AddOpExpression(std::shared_ptr<const AST::Expression> lef
     : BinaryOpExpression(std::move(leftExpr), std::move(rightExpr)) { }
 
 void AST::AddOpExpression::print(llvm::raw_ostream& stream) const {
+    stream << "(";
     this->leftExpr->print(stream);
-    stream << " + ";
+    stream << ") + (";
     this->rightExpr->print(stream);
+    stream << ")";
 }
 
 llvm::Value* AST::AddOpExpression::generate(Generator& generator) const {
@@ -24,16 +26,50 @@ llvm::Value* AST::AddOpExpression::generate(Generator& generator) const {
 
 AST::SubOpExpression::SubOpExpression(std::shared_ptr<const AST::Expression> leftExpr,
         std::shared_ptr<const AST::Expression> rightExpr)
-        : BinaryOpExpression(std::move(leftExpr), std::move(rightExpr)) { }
+    : BinaryOpExpression(std::move(leftExpr), std::move(rightExpr)) { }
 
 llvm::Value* AST::SubOpExpression::generate(Generator& generator) const {
     return generator.generate(*this);
 }
 
 void AST::SubOpExpression::print(llvm::raw_ostream& stream) const {
+    stream << "(";
     this->leftExpr->print(stream);
-    stream << " - ";
+    stream << ") - (";
     this->rightExpr->print(stream);
+    stream << ")";
+}
+
+AST::MulOpExpression::MulOpExpression(std::shared_ptr<const AST::Expression> leftExpr,
+        std::shared_ptr<const AST::Expression> rightExpr)
+        : BinaryOpExpression(std::move(leftExpr), std::move(rightExpr)) { }
+
+llvm::Value* AST::MulOpExpression::generate(Generator& generator) const {
+    return generator.generate(*this);
+}
+
+void AST::MulOpExpression::print(llvm::raw_ostream& stream) const {
+    stream << "(";
+    this->leftExpr->print(stream);
+    stream << ") * (";
+    this->rightExpr->print(stream);
+    stream << ")";
+}
+
+AST::DivOpExpression::DivOpExpression(std::shared_ptr<const AST::Expression> leftExpr,
+        std::shared_ptr<const AST::Expression> rightExpr)
+        : BinaryOpExpression(std::move(leftExpr), std::move(rightExpr)) { }
+
+llvm::Value* AST::DivOpExpression::generate(Generator& generator) const {
+    return generator.generate(*this);
+}
+
+void AST::DivOpExpression::print(llvm::raw_ostream& stream) const {
+    stream << "(";
+    this->leftExpr->print(stream);
+    stream << ") / (";
+    this->rightExpr->print(stream);
+    stream << ")";
 }
 
 void AST::IntegerType::print(llvm::raw_ostream& stream) const {

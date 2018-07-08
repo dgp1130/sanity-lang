@@ -18,6 +18,8 @@ class Generator {
 public:
     llvm::Value* generate(const AST::AddOpExpression& addition);
     llvm::Value* generate(const AST::SubOpExpression& subtraction);
+    llvm::Value* generate(const AST::MulOpExpression& multiplication);
+    llvm::Value* generate(const AST::DivOpExpression& division);
     llvm::IntegerType* generate(const AST::IntegerType& integer);
     llvm::FunctionType* generate(const AST::FunctionPrototype& prototype);
     llvm::Function* generate(const AST::Function& func);

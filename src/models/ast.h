@@ -54,6 +54,26 @@ namespace AST {
         void print(llvm::raw_ostream& stream) const override;
     };
 
+    class MulOpExpression : public BinaryOpExpression {
+    public:
+        MulOpExpression(std::shared_ptr<const AST::Expression> leftExpr,
+                std::shared_ptr<const AST::Expression> rightExpr);
+
+        llvm::Value* generate(Generator& generator) const override;
+
+        void print(llvm::raw_ostream& stream) const override;
+    };
+
+    class DivOpExpression : public BinaryOpExpression {
+    public:
+        DivOpExpression(std::shared_ptr<const AST::Expression> leftExpr,
+                std::shared_ptr<const AST::Expression> rightExpr);
+
+        llvm::Value* generate(Generator& generator) const override;
+
+        void print(llvm::raw_ostream& stream) const override;
+    };
+
     class Type : public Element {
     public:
         virtual llvm::Type* generate(Generator& generator) const = 0;

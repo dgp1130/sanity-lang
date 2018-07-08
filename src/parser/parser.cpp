@@ -125,15 +125,15 @@ std::shared_ptr<const AST::Expression> Parser::expression() {
 }
 
 // <expr-add-sub> ::= <expr-leaf> <expr-add-sub'>
-// <expr-add-sub'> ::= + <expr-leaf> <expr-add-sub'>
-//                   | - <expr-leaf> <expr-add-sub'>
+// <expr-add-sub'> ::= + <expr-mul-div> <expr-add-sub'>
+//                   | - <expr-mul-div> <expr-add-sub'>
 //                   | ø
 std::shared_ptr<const AST::Expression> Parser::exprAddSub() {
-    std::shared_ptr<const AST::Expression> leftExpr = this->exprLeaf();
+    std::shared_ptr<const AST::Expression> leftExpr = this->exprMulDiv();
 
     while (!this->tokens.empty() && (this->tokens.front()->source == "+" || this->tokens.front()->source == "-")) {
         const std::shared_ptr<const Token> op = this->match();
-        const std::shared_ptr<const AST::Expression> rightExpr = this->exprLeaf();
+        const std::shared_ptr<const AST::Expression> rightExpr = this->exprMulDiv();
 
         if (op->source == "+") {
             leftExpr = std::make_shared<const AST::AddOpExpression>(AST::AddOpExpression(leftExpr, rightExpr));
@@ -145,6 +145,42 @@ std::shared_ptr<const AST::Expression> Parser::exprAddSub() {
     }
 
     return leftExpr;
+}
+
+// <expr-mul-div> ::= <expr-paren> <expr-mul-div'>
+// <expr-mul-div'> ::= * <expr-paren> <expr-mul-div'>
+//                   | / <expr-paren> <expr-mul-div'>
+//                   | ø
+std::shared_ptr<const AST::Expression> Parser::exprMulDiv() {
+    std::shared_ptr<const AST::Expression> leftExpr = this->exprParen();
+
+    while (!this->tokens.empty() && (this->tokens.front()->source == "*" || this->tokens.front()->source == "/")) {
+        const std::shared_ptr<const Token> op = this->match();
+        const std::shared_ptr<const AST::Expression> rightExpr = this->exprParen();
+
+        if (op->source == "*") {
+            leftExpr = std::make_shared<const AST::MulOpExpression>(AST::MulOpExpression(leftExpr, rightExpr));
+        } else if (op->source == "/") {
+            leftExpr = std::make_shared<const AST::DivOpExpression>(AST::DivOpExpression(leftExpr, rightExpr));
+        } else {
+            throw AssertionException("Expected operator * or /, but got " + op->source);
+        }
+    }
+
+    return leftExpr;
+}
+
+// <expr-paren> ::= ( <expression> )
+//                | <expr-leaf>
+std::shared_ptr<const AST::Expression> Parser::exprParen() {
+    if (!this->tokens.empty() && this->tokens.front()->source == "(") {
+        this->match(); // (
+        const std::shared_ptr<const AST::Expression> expr = this->expression();
+        this->match(")");
+        return expr;
+    } else {
+        return this->exprLeaf();
+    }
 }
 
 // <expr-leaf> ::= <function-call>
