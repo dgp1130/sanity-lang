@@ -351,7 +351,7 @@ of creating named arguments to functions. Data can be easily stored and extracte
 without requiring explicitly defined classes or awkward `Tuple`-like objects. An unlimited number of
 values and types can be easily stored with any additional complexity.
 
-#### First-Class Generics
+#### First-Class Generics (Type Parameters)
 
 #### Type Operations
 
