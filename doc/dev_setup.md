@@ -40,7 +40,13 @@ $ cd sanity-lang
 ## Build and Run Sanity
 
 Sanity uses the CMake build system. CMake can be installed using your friendly neighborhood package manager. To actually
-build the compiler, run:
+build the compiler, first initialize CMake:
+
+```bash
+$ cmake .
+```
+
+This only needs to be done once, then each time you want to build the compiler, run:
 
 ```bash
 $ cmake --build . --target Sanity
