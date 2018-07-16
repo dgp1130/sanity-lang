@@ -27,7 +27,7 @@ std::queue<std::shared_ptr<const Token>> Lexer::tokenize(std::queue<char>& chars
     auto tokens = std::queue<std::shared_ptr<const Token>>();
 
     auto stream = std::make_unique<Stream>(Stream(chars));
-    std::shared_ptr<const Token> token;
+    std::experimental::optional<std::shared_ptr<const Token>> token;
     do {
         token = stream->repeat(std::regex("^[ \t\n\r]"), 1, [](Stream* stream) {
             stream->ignore(1 /* space */, true /* updateStartLineNumbers */);
@@ -80,8 +80,9 @@ std::queue<std::shared_ptr<const Token>> Lexer::tokenize(std::queue<char>& chars
         })->match(std::regex("^[^a-zA-Z0-9]"), 1, [](Stream* stream) {
             stream->consume(/* punctuation */)->returnToken();
         })->extractResult();
-        if (token != nullptr) tokens.push(token);
-    } while (token != nullptr);
+
+        if (token) tokens.push(token.value());
+    } while (token);
 
     return tokens;
 }

@@ -43,7 +43,7 @@ Stream::Stream(std::queue<char>& chars) {
     }
 
     this->buffer = std::deque<char>();
-    this->result = nullptr;
+    this->result = std::experimental::nullopt;
 }
 
 void Stream::advanceChars(const int numChars, const bool updateStartColumn) {
@@ -172,20 +172,20 @@ void Stream::throwException(const std::string& message) const {
     throw SyntaxException(message, this->line, this->startCol, this->currentCol);
 }
 
-std::shared_ptr<const Token> Stream::extractResult() {
-    std::shared_ptr<const Token> token = this->result;
+std::experimental::optional<std::shared_ptr<const Token>> Stream::extractResult() {
+    std::experimental::optional<std::shared_ptr<const Token>> token = this->result;
 
     // If no token to return and there is still data to process, then something has gone wrong.
-    if (token == nullptr && (!this->buffer.empty() || !this->chars.empty())) {
+    if (!token && (!this->buffer.empty() || !this->chars.empty())) {
         throw IllegalStateException("returnToken() not properly called before extractToken()");
     }
 
-    this->result = nullptr;
+    this->result = std::experimental::nullopt;
 
     return token;
 }
 
 bool Stream::active() {
     // Skip processing if we already have a result, or if there are no characters left to analyze.
-    return this->result == nullptr && !this->chars.empty();
+    return !this->result && !this->chars.empty();
 }

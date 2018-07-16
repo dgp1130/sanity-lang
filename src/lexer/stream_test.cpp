@@ -25,38 +25,38 @@ TEST_F(StreamTestFixture, FrontReturnsFirstCharacter) {
 
 TEST_F(StreamTestFixture, IgnoresCharacters) {
     this->stream->ignore(3)->returnToken();
-    std::shared_ptr<const Token> token = this->stream->extractResult();
+    std::experimental::optional<std::shared_ptr<const Token>> token = this->stream->extractResult();
 
-    ASSERT_EQ("", token->source);
+    ASSERT_EQ("", token.value()->source);
 }
 
 TEST_F(StreamTestFixture, ConsumesCharacters) {
     this->stream->consume(3)->returnToken();
-    std::shared_ptr<const Token> token = this->stream->extractResult();
+    std::experimental::optional<std::shared_ptr<const Token>> token = this->stream->extractResult();
 
-    ASSERT_EQ("abc", token->source);
+    ASSERT_EQ("abc", token.value()->source);
 }
 
 TEST_F(StreamTestFixture, ConsumesTheGivenCharacterWithoutAdvancing) {
     this->stream->consume('z')->returnToken();
-    std::shared_ptr<const Token> token = this->stream->extractResult();
+    std::experimental::optional<std::shared_ptr<const Token>> token = this->stream->extractResult();
 
-    ASSERT_EQ("z", token->source);
+    ASSERT_EQ("z", token.value()->source);
     ASSERT_EQ('a', stream->front());
 }
 
 TEST_F(StreamTestFixture, ConsumesWhileCharacterMatchRegex) {
     this->stream->consumeWhile(std::regex("^[a-z]"), 1)->returnToken();
-    std::shared_ptr<const Token> token = this->stream->extractResult();
+    std::experimental::optional<std::shared_ptr<const Token>> token = this->stream->extractResult();
 
-    ASSERT_EQ("abc", token->source);
+    ASSERT_EQ("abc", token.value()->source);
 }
 
 TEST_F(StreamTestFixture, ConsumeWhileDoesNotThrowExceptionOnEofWhenCalledWithoutMessage) {
     this->stream->consumeWhile(std::regex("^."), 1)->returnToken();
-    std::shared_ptr<const Token> token = this->stream->extractResult();
+    std::experimental::optional<std::shared_ptr<const Token>> token = this->stream->extractResult();
 
-    ASSERT_EQ("abc123", token->source);
+    ASSERT_EQ("abc123", token.value()->source);
 }
 
 TEST_F(StreamTestFixture, ConsumeWhileThrowsExceptionOnEofWhenCalledWithMessage) {
@@ -102,9 +102,9 @@ TEST_F(StreamTestFixture, RepeatInvokesCallbackWhileRegexMatches) {
     this->stream->repeat(std::regex("^[a-z]"), 1, [](Stream* stream) {
         stream->consume();
     })->returnToken();
-    std::shared_ptr<const Token> token = this->stream->extractResult();
+    std::experimental::optional<std::shared_ptr<const Token>> token = this->stream->extractResult();
 
-    ASSERT_EQ("abc", token->source);
+    ASSERT_EQ("abc", token.value()->source);
 }
 
 TEST_F(StreamTestFixture, RepeatDoesNotInvokeCallbackIfNoMatch) {
@@ -129,15 +129,15 @@ TEST_F(StreamTestFixture, RepeatThrowsExceptionOnEofWhenCalledWithMessage) {
 
 TEST_F(StreamTestFixture, CallsAfterReturnTokenAreIgnoredUntilNextRun) {
     std::queue<std::shared_ptr<const Token>> tokens;
-    std::shared_ptr<const Token> token;
+    std::experimental::optional<std::shared_ptr<const Token>> token;
     do {
         token = this->stream->match(std::regex("^[a-z]"), 1, [](Stream* stream) {
             stream->consumeWhile(std::regex("^[a-z]"), 1)->returnToken();
         })->match(std::regex("^[0-9]"), 1, [](Stream* stream) {
             stream->consumeWhile(std::regex("^[0-9]"), 1)->returnToken();
         })->extractResult();
-        if (token != nullptr) tokens.push(token);
-    } while (token != nullptr);
+        if (token) tokens.push(token.value());
+    } while (token);
 
     ASSERT_EQ(2, tokens.size());
 

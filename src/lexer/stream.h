@@ -14,7 +14,7 @@ class Stream {
 private:
     std::deque<char> chars;
     std::deque<char> buffer;
-    std::shared_ptr<const Token> result;
+    std::experimental::optional<std::shared_ptr<const Token>> result;
     int line = 1;
     int startCol = 1;
     int currentCol = 1;
@@ -96,10 +96,10 @@ public:
 
     /**
      * Takes the token previously saved by returnToken() and returns it while resetting the current state of the stream
-     * to continue processing the input.
+     * to continue processing the input. Returns std::experimental::nullopt if the input has reached EOF.
      * @see #returnToken()
      */
-    std::shared_ptr<const Token> extractResult();
+    std::experimental::optional<std::shared_ptr<const Token>> extractResult();
 
 private:
     /**
