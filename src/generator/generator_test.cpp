@@ -70,6 +70,12 @@ TEST(Generator, GeneratesIntegerType) {
     ASSERT_EQ(32, integer->getBitWidth());
 }
 
+TEST(Generator, GeneratesStringType) {
+    const llvm::PointerType* string = Generator().generate(AST::StringType());
+
+    ASSERT_EQ(true, string->isPointerTy());
+}
+
 TEST(Generator, GeneratesFunctionPrototype) {
     const auto integer = std::make_shared<const AST::IntegerType>(AST::IntegerType());
     const auto params = std::vector<std::shared_ptr<const AST::Type>>({ integer, integer });
@@ -145,6 +151,14 @@ TEST(Generator, GeneratesIntegerLiteral) {
     auto generated = (llvm::ConstantInt*) Generator().generate(integerLiteral);
 
     ASSERT_EQ((int64_t) 1234, generated->getValue().getSExtValue());
+}
+
+TEST(Generator, GeneratesStringLiteral) {
+    const std::shared_ptr<const Token> token = TokenBuilder("abc123").setStringLiteral(true).build();
+    const auto stringLiteral = AST::StringLiteral(token);
+
+    // Not sure how to verify the string's contents.
+    ASSERT_NO_THROW((llvm::ConstantExpr*) Generator().generate(stringLiteral));
 }
 
 TEST(Generator, GeneratesFunctionCall) {

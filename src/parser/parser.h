@@ -34,6 +34,7 @@ private:
     std::shared_ptr<const AST::FunctionCall> functionCall();
     std::shared_ptr<const AST::CharLiteral> charLiteral();
     std::shared_ptr<const AST::IntegerLiteral> integerLiteral();
+    std::shared_ptr<const AST::StringLiteral> stringLiteral();
 
 public:
     /**

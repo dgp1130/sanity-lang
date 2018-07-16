@@ -44,6 +44,50 @@ TEST(Parser, ParsesExtern) {
     ASSERT_EQ("extern test: (int, int) -> int;\n", ss.str());
 }
 
+TEST(Parser, ParsesIntegerType) {
+    // Currently, the int type can only be used in an extern which must be a function.
+    std::shared_ptr<const Token> tokens[] = {
+        TokenBuilder("extern").build(),
+        TokenBuilder("test").build(),
+        TokenBuilder(":").build(),
+        TokenBuilder("(").build(),
+        TokenBuilder(")").build(),
+        TokenBuilder("->").build(),
+        TokenBuilder("int").build(),
+        TokenBuilder(";").build(),
+    };
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 8 /* length */);
+
+    std::shared_ptr<const AST::File> file = Parser::parse(input);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    file->print(ss);
+    ASSERT_EQ("extern test: () -> int;\n", ss.str());
+}
+
+TEST(Parser, ParsesStringType) {
+    // Currently, the string type can only be used in an extern which must be a function.
+    std::shared_ptr<const Token> tokens[] = {
+        TokenBuilder("extern").build(),
+        TokenBuilder("test").build(),
+        TokenBuilder(":").build(),
+        TokenBuilder("(").build(),
+        TokenBuilder(")").build(),
+        TokenBuilder("->").build(),
+        TokenBuilder("string").build(),
+        TokenBuilder(";").build(),
+    };
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 8 /* length */);
+
+    std::shared_ptr<const AST::File> file = Parser::parse(input);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    file->print(ss);
+    ASSERT_EQ("extern test: () -> string;\n", ss.str());
+}
+
 TEST(Parser, ThrowsParseExceptionOnExternsUnexpectedEOF) {
     std::shared_ptr<const Token> tokens[] = {
             TokenBuilder("extern").build(),
@@ -238,6 +282,21 @@ TEST(Parser, ParsesSingleIntegerLiteralStatement) {
     ASSERT_EQ("1234;\n", ss.str());
 }
 
+TEST(Parser, ParsesSingleStringLiteralStatement) {
+    std::shared_ptr<const Token> tokens[] = {
+        TokenBuilder("abc123").setStringLiteral(true).build(),
+        TokenBuilder(";").build(),
+    };
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 2 /* length */);
+
+    std::shared_ptr<const AST::File> file = Parser::parse(input);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    file->print(ss);
+    ASSERT_EQ("\"abc123\";\n", ss.str());
+}
+
 TEST(Parser, ParsesMultipleStatements) {
     std::shared_ptr<const Token> tokens[] = {
         TokenBuilder("test1").build(),
@@ -314,7 +373,7 @@ TEST(Parser, ThrowsParseExceptionOnUnexpectedEOF) {
     ASSERT_THROW(Parser::parse(input), ParseException);
 }
 
-TEST(Parser, ThrowsPareExceptionOnUnmatchedParen) {
+TEST(Parser, ThrowsParseExceptionOnUnmatchedParen) {
     std::shared_ptr<const Token> tokens[] = {
         TokenBuilder("(").build(),
         TokenBuilder("1").setIntegerLiteral(true).build(),

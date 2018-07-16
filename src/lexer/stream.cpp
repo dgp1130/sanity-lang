@@ -4,6 +4,7 @@
 #include <memory>
 #include <regex>
 #include <functional>
+#include <experimental/optional>
 #include "../models/token.h"
 #include "../models/exceptions.h"
 #include "../models/token_builder.h"
@@ -68,6 +69,12 @@ void Stream::advanceChars(const int numChars, const bool updateStartColumn) {
     }
 }
 
+char Stream::front() {
+    if (!this->active()) throw IllegalStateException("No characters left in the Stream.");
+
+    return this->chars.front();
+}
+
 Stream* Stream::ignore(const int numChars, const bool updateStartColumn) {
     if (!this->active()) return this;
 
@@ -80,31 +87,38 @@ Stream* Stream::consume(const int numChars) {
     if (!this->active()) return this;
 
     for (int i = 0; i < numChars; ++i) {
-        buffer.push_back(this->chars.front());
+        this->consume(this->chars.front());
         this->advanceChars(1 /* numChars */, true /* updateStartColumn */);
     }
 
     return this;
 }
 
-Stream* Stream::consumeWhile(const std::regex& matcher, const int limit) {
-    if (!this->active()) return this;
-
-    this->repeat(matcher, limit, [](Stream* stream) {
-        stream->consume();
-    });
+Stream* Stream::consume(const char character) {
+    this->buffer.push_back(character);
 
     return this;
 }
 
-Stream* Stream::match(const std::regex& matcher, const int limit, const std::function<void (Stream* stream)> callback) {
+Stream* Stream::consumeWhile(const std::regex& matcher, const int limit,
+        const std::experimental::optional<const std::string>& eofError) {
+    if (!this->active()) return this;
+
+    this->repeat(matcher, limit, [](Stream* stream) {
+        stream->consume();
+    }, eofError);
+
+    return this;
+}
+
+Stream* Stream::match(const std::regex& matcher, const int limit, const std::function<void (Stream* stream)>& callback) {
     return this->match(matcher, limit, callback, [](Stream* stream) {
         // Do nothing on else.
     });
 }
 
-Stream* Stream::match(const std::regex& matcher, const int limit, const std::function<void (Stream* stream)> thenCb,
-        const std::function<void (Stream* stream)> elseCb) {
+Stream* Stream::match(const std::regex& matcher, const int limit, const std::function<void (Stream* stream)>& thenCb,
+        const std::function<void (Stream* stream)>& elseCb) {
     if (!this->active()) return this;
 
     const std::string str = dequeToString(this->chars, (unsigned long) limit);
@@ -119,7 +133,8 @@ Stream* Stream::match(const std::regex& matcher, const int limit, const std::fun
     return this;
 }
 
-Stream* Stream::repeat(const std::regex& matcher, const int limit, const std::function<void(Stream*)> callback) {
+Stream* Stream::repeat(const std::regex& matcher, const int limit, const std::function<void (Stream*)>& callback,
+        const std::experimental::optional<const std::string>& eofError) {
     if (!this->active()) return this;
 
     bool matched;
@@ -128,6 +143,10 @@ Stream* Stream::repeat(const std::regex& matcher, const int limit, const std::fu
         matched = std::regex_search(str, matcher);
         if (matched) callback(this);
     } while (matched && this->active());
+
+    if (this->chars.empty() && eofError) {
+        this->throwException(eofError.value());
+    }
 
     return this;
 }

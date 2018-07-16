@@ -83,8 +83,25 @@ TEST(Lexer, TokenizesIntegerLiterals) {
     ASSERT_EQ(true, token->isIntegerLiteral);
 }
 
-TEST(Lexer, TokenizingInvalidCharactersThrowsSyntaxException) {
+TEST(Lexer, TokenizesStringLiterals) {
+    std::queue<char> q = QueueUtils::queueify("\"Hello World!\"");
+    std::queue<std::shared_ptr<const Token>> tokens = Lexer::tokenize(q);
+
+    ASSERT_EQ(1, tokens.size());
+
+    std::shared_ptr<const Token> token = tokens.front();
+    tokens.pop();
+    ASSERT_EQ("Hello World!", token->source);
+    ASSERT_EQ(true, token->isStringLiteral);
+}
+
+TEST(Lexer, TokenizingUnterminatedCharacterThrowsSyntaxException) {
     std::queue<char> q = QueueUtils::queueify("\'ab");
+    ASSERT_THROW(Lexer::tokenize(q), SyntaxException);
+}
+
+TEST(Lexer, TokenizingUnterminatedStringThrowsSyntaxException) {
+    std::queue<char> q = QueueUtils::queueify("\"test");
     ASSERT_THROW(Lexer::tokenize(q), SyntaxException);
 }
 
@@ -161,12 +178,29 @@ TEST(Lexer, TokenizesEscapedCharacterLiterals) {
     ASSERT_EQ("\\", backslash->source);
 }
 
-TEST(Lexer, TokenizingUnknownEscapeCharacterThrowsException) {
-    std::queue<char> q = QueueUtils::queueify("\'\\z\'");
+TEST(Lexer, TokenizesEscapedCharactersInStringLiterals) {
+    std::queue<char> q = QueueUtils::queueify(R"("\n\r\t\'\"\\")");
+    std::queue<std::shared_ptr<const Token>> tokens = Lexer::tokenize(q);
+
+    ASSERT_EQ(1, tokens.size());
+
+    std::shared_ptr<const Token> token = tokens.front();
+    tokens.pop();
+
+    ASSERT_EQ("\n\r\t\'\"\\", token->source);
+}
+
+TEST(Lexer, TokenizingUnknownEscapeCharacterInCharacterLiteralThrowsException) {
+    std::queue<char> q = QueueUtils::queueify(R"('\z')");
     ASSERT_THROW(Lexer::tokenize(q), SyntaxException);
 }
 
-TEST(Lexer, TokenizingInvalidCharacterLiteralsThrowsException) {
+TEST(Lexer, TokenizingUnknownEscapeCharacterInStringLiteralThrowsException) {
+    std::queue<char> q = QueueUtils::queueify(R"("\z")");
+    ASSERT_THROW(Lexer::tokenize(q), SyntaxException);
+}
+
+TEST(Lexer, TokenizingInvalidCharacterLiteralThrowsException) {
     std::queue<char> qNewline = QueueUtils::queueify("\'\n\'");
     ASSERT_THROW(Lexer::tokenize(qNewline), SyntaxException);
 
@@ -183,8 +217,26 @@ TEST(Lexer, TokenizingInvalidCharacterLiteralsThrowsException) {
     ASSERT_THROW(Lexer::tokenize(qDoubleQuote), SyntaxException);
 
     // Backslash is weird because the '\' escapes the trailing single-quote waiting for another single quote.
-    // This is actually an unexpected EOF file error. This throws an IllegalStateException, which it really shouldn't,
-    // but close enough for now.
+    // This is actually an unexpected EOF error. This throws an IllegalStateException, which it really shouldn't, but
+    // close enough for now.
     std::queue<char> qBackslash = QueueUtils::queueify("\'\\\'");
     ASSERT_ANY_THROW(Lexer::tokenize(qBackslash));
+}
+
+TEST(Lexer, TokenizingInvalidStringLiteralThrowsException) {
+    std::queue<char> qNewline = QueueUtils::queueify("\"\n\"");
+    ASSERT_THROW(Lexer::tokenize(qNewline), SyntaxException);
+
+    std::queue<char> qCarriageReturn = QueueUtils::queueify("\"\r\"");
+    ASSERT_THROW(Lexer::tokenize(qCarriageReturn), SyntaxException);
+
+    std::queue<char> qTab = QueueUtils::queueify("\"\t\"");
+    ASSERT_THROW(Lexer::tokenize(qTab), SyntaxException);
+
+    std::queue<char> qSingleQuote = QueueUtils::queueify("\"\'\"");
+    ASSERT_THROW(Lexer::tokenize(qSingleQuote), SyntaxException);
+
+    // Note: This is technically an unexpected EOF error.
+    std::queue<char> qBackslash = QueueUtils::queueify("\"\\\"");
+    ASSERT_THROW(Lexer::tokenize(qBackslash), SyntaxException);
 }

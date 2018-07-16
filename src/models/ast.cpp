@@ -80,6 +80,14 @@ llvm::IntegerType* AST::IntegerType::generate(Generator& generator) const {
     return generator.generate(*this);
 }
 
+void AST::StringType::print(llvm::raw_ostream& stream) const {
+    stream << "string";
+}
+
+llvm::PointerType* AST::StringType::generate(Generator& generator) const {
+    return generator.generate(*this);
+}
+
 AST::FunctionPrototype::FunctionPrototype(const std::vector<std::shared_ptr<const AST::Type>>& parameters,
         std::shared_ptr<const AST::Type> returnType)
     : parameters(parameters), returnType(std::move(returnType)) { }
@@ -161,6 +169,16 @@ llvm::Value* AST::IntegerLiteral::generate(Generator& generator) const {
 
 void AST::IntegerLiteral::print(llvm::raw_ostream& stream) const {
     stream << this->value;
+}
+
+AST::StringLiteral::StringLiteral(std::shared_ptr<const Token> value) : value(value->source) { }
+
+llvm::Value* AST::StringLiteral::generate(Generator& generator) const {
+    return generator.generate(*this);
+}
+
+void AST::StringLiteral::print(llvm::raw_ostream& stream) const {
+    stream << "\"" << this->value << "\"";
 }
 
 AST::FunctionCall::FunctionCall(std::shared_ptr<const Token> callee,

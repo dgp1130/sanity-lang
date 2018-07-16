@@ -56,6 +56,10 @@ llvm::IntegerType* Generator::generate(const AST::IntegerType& integer) {
     return llvm::IntegerType::getInt32Ty(*context);
 }
 
+llvm::PointerType* Generator::generate(const AST::StringType& string) {
+    return llvm::PointerType::getInt8PtrTy(*context);
+}
+
 llvm::FunctionType* Generator::generate(const AST::FunctionPrototype& prototype) {
     std::vector<llvm::Type*> parameterTypes;
     for (const auto& param : prototype.parameters) {
@@ -116,6 +120,10 @@ llvm::Value* Generator::generate(const AST::CharLiteral& literal) {
 llvm::Value* Generator::generate(const AST::IntegerLiteral& literal) {
     llvm::APInt llvmInt(INTEGER_BIT_SIZE, (uint64_t) literal.value, true /* signed */);
     return llvm::ConstantInt::get(*context, llvmInt);
+}
+
+llvm::Value* Generator::generate(const AST::StringLiteral& literal) {
+    return builder.CreateGlobalStringPtr(literal.value, "globalstr");
 }
 
 // Generate a call to a function. Currently assumes it takes exactly one argument and the result is dropped because that

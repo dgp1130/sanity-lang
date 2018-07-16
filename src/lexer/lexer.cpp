@@ -10,31 +10,8 @@
 typedef Exceptions::AssertionException AssertionException;
 typedef Exceptions::SyntaxException SyntaxException;
 
-// Given a 1-character normal string, it will return it unchanged as a character. If that one character is a literal
-// which should be escaped, an error is thrown. Given a 2-character string with a leading backslash, it will convert
-// that two character escape sequence into the one character it represents.
-char escapeCharacter(const std::string& unescaped, const Stream* stream) {
-    if (unescaped.size() > 2) throw AssertionException("Got more than two characters to escape: " + unescaped);
-    if (unescaped.size() == 1 && unescaped[0] == '\\') {
-        throw AssertionException("Got only a backslash to escape: " + unescaped);
-    }
-
-    // Nothing to escape, verify this isn't a weird character literal.
-    if (unescaped.size() == 1) {
-        const char character = unescaped[0];
-        switch (character) {
-            case '\n': stream->throwException(R"(Unexpected newline, use '\n' instead.)");
-            case '\r': stream->throwException(R"(Unexpected carriage return, use '\r' instead.)");
-            case '\t': stream->throwException(R"(Unexpected tab, use '\t' instead.)");
-            case '\'': stream->throwException(R"(Unexpected single quote, use '\'' instead.)");
-            case '\"': stream->throwException(R"(Unexpected double quote, use '\"' instead.)");
-            case '\\': stream->throwException(R"(Unexpected backslash, use '\\' instead.)");
-            default: return character;
-        }
-    }
-
-    // Escape the character into the actual literal.
-    const char controlChar = unescaped[1];
+// Returns the given control char (the one that comes after the backslash, so the "n" in "\n") as its escaped value.
+char escapeCharacter(const char controlChar, const Stream* stream) {
     switch (controlChar) {
         case 'n': return '\n';
         case 'r': return '\r';
@@ -60,18 +37,43 @@ std::queue<std::shared_ptr<const Token>> Lexer::tokenize(std::queue<char>& chars
             stream->consumeWhile(std::regex("^[0-9]"), 1)->returnToken([](const std::string& source) {
                 return TokenBuilder(source).setIntegerLiteral(true);
             });
-        })->match(std::regex("^\'"), 1, [](Stream* stream) {
-            stream->ignore(/* open quote */)->match(std::regex("^\\\\"), 1, [](Stream* stream) { // Then
-                stream->consume(/* backslash */)->consume(/* control character */);
-            }, [](Stream* stream) { // Else
-                stream->consume(/* char */);
-            })->match(std::regex("^\'"), 1, [](Stream* stream) { // Then
-                stream->ignore(/* close quote */)->returnToken([&stream](const std::string& source) {
-                    const char escapedSource = escapeCharacter(source, stream);
-                    return TokenBuilder(std::string(1, escapedSource)).setCharLiteral(true);
+        })->match(std::regex("^\""), 1, [](Stream* stream) { // Then
+            stream->ignore(/* open double quote */)->repeat(std::regex("^[^\"\n\t\r]"), 1, [](Stream* stream) {
+                stream->match(std::regex("^\\\\"), 1, [](Stream* stream) { // Then, escaped char
+                    // Ignore in a separate statement so it occurs before the stream->front() call.
+                    stream->ignore(/* backslash */);
+                    stream->consume(escapeCharacter(stream->front(), stream))->ignore(/* control character */);
+                }, [](Stream* stream) { // Else, non-escaped character
+                    stream->match(std::regex("^\'"), 1, [](Stream* stream) { // Then, single quote in string
+                        stream->throwException(R"(Cannot use ' in a string literal, use \' instead.)");
+                    }, [](Stream* stream) { // Else, non single quote character
+                        stream->consume(/* char */);
+                    });
+                });
+            }, std::string("Unexpected EOF"))->match(std::regex("^\""), 1, [](Stream* stream) { // Then
+                stream->ignore(/* close double quote */)->returnToken([](const std::string& source) {
+                    return TokenBuilder(source).setStringLiteral(true);
                 });
             }, [](Stream* stream) { // Else
-                stream->throwException("Expected character literal to end with a close quote.");
+                stream->throwException("Illegal character in string.");
+            });
+        })->match(std::regex("^\'"), 1, [](Stream* stream) {
+            stream->ignore(/* open quote */)->match(std::regex("^\\\\"), 1, [](Stream* stream) { // Then, escaped char
+                // Ignore in a separate statement so it occurs before the stream->front() call.
+                stream->ignore(/* backslash */);
+                stream->consume(escapeCharacter(stream->front(), stream))->ignore(/* control character */);
+            }, [](Stream* stream) { // Else, non-escaped character
+                if (std::regex_match(std::string(1, stream->front()), std::regex("[\n\t\r\'\"]"))) {
+                    stream->throwException("Invalid character in character literal");
+                } else {
+                    stream->consume(/* char */);
+                }
+            })->match(std::regex("^\'"), 1, [](Stream* stream) { // Then
+                stream->ignore(/* close quote */)->returnToken([&stream](const std::string& source) {
+                    return TokenBuilder(source).setCharLiteral(true);
+                });
+            }, [](Stream* stream) { // Else
+                stream->throwException("Expected character literal to end with a closing single quote.");
             });
         })->match(std::regex("^->"), 2, [](Stream* stream) {
             stream->consume(2 /* -> */)->returnToken();

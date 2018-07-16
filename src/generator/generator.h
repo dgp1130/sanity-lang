@@ -21,12 +21,14 @@ public:
     llvm::Value* generate(const AST::MulOpExpression& multiplication);
     llvm::Value* generate(const AST::DivOpExpression& division);
     llvm::IntegerType* generate(const AST::IntegerType& integer);
+    llvm::PointerType* generate(const AST::StringType& string);
     llvm::FunctionType* generate(const AST::FunctionPrototype& prototype);
     llvm::Function* generate(const AST::Function& func);
     llvm::Value* generate(const AST::Statement& stmt);
     llvm::Function* generate(const AST::File& file);
     llvm::Value* generate(const AST::CharLiteral& literal);
     llvm::Value* generate(const AST::IntegerLiteral& literal);
+    llvm::Value* generate(const AST::StringLiteral& literal);
     llvm::CallInst* generate(const AST::FunctionCall& call);
 };
 

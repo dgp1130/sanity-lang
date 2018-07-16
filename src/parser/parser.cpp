@@ -86,8 +86,11 @@ std::shared_ptr<const AST::Type> Parser::type() {
     if (this->tokens.empty()) throw ParseException("Expected a type, but got EOF.");
 
     if (this->tokens.front()->source == "int") {
-        this->match("int");
+        this->match(/* int type */);
         return std::make_shared<AST::IntegerType>(AST::IntegerType());
+    } else if (this->tokens.front()->source == "string") {
+        this->match(/* string type */);
+        return std::make_shared<AST::StringType>(AST::StringType());
     } else if (this->tokens.front()->source == "(") {
         return this->funcType();
     } else {
@@ -193,6 +196,8 @@ std::shared_ptr<const AST::Expression> Parser::exprLeaf() {
         return this->charLiteral();
     } else if (this->tokens.front()->isIntegerLiteral) {
         return this->integerLiteral();
+    } else if (this->tokens.front()->isStringLiteral) {
+        return this->stringLiteral();
     } else {
         return this->functionCall();
     }
@@ -238,6 +243,14 @@ std::shared_ptr<const AST::IntegerLiteral> Parser::integerLiteral() {
     }, "integer literal");
 
     return std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(literal));
+}
+
+std::shared_ptr<const AST::StringLiteral> Parser::stringLiteral() {
+    const std::shared_ptr<const Token> literal = this->match([](std::shared_ptr<const Token> token) {
+        return token->isStringLiteral;
+    }, "string literal");
+
+    return std::make_shared<const AST::StringLiteral>(AST::StringLiteral(literal));
 }
 
 std::shared_ptr<const AST::File> Parser::parse(std::queue<std::shared_ptr<const Token>>& tokens) {

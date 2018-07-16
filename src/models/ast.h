@@ -88,6 +88,15 @@ namespace AST {
         void print(llvm::raw_ostream& stream) const override;
     };
 
+    class StringType : public Type {
+    public:
+        StringType() = default;
+
+        llvm::PointerType* generate(Generator& generator) const override;
+
+        void print(llvm::raw_ostream& stream) const override;
+    };
+
     class FunctionPrototype : public Type {
     public:
         const std::vector<std::shared_ptr<const Type>> parameters;
@@ -152,6 +161,17 @@ namespace AST {
         const int32_t value;
 
         explicit IntegerLiteral(std::shared_ptr<const Token> value);
+
+        llvm::Value* generate(Generator& generator) const override;
+
+        void print(llvm::raw_ostream& stream) const override;
+    };
+
+    class StringLiteral : public Expression {
+    public:
+        const std::string value;
+
+        explicit StringLiteral(std::shared_ptr<const Token> value);
 
         llvm::Value* generate(Generator& generator) const override;
 

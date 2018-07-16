@@ -6,6 +6,7 @@
 #include <memory>
 #include <regex>
 #include <functional>
+#include <experimental/optional>
 #include "../models/token.h"
 #include "../models/token_builder.h"
 
@@ -24,6 +25,11 @@ public:
     explicit Stream(std::queue<char>& chars);
 
     /**
+     * Returns the first character in the sequence.
+     */
+    char front();
+
+    /**
      * Ignores the next amount of characters in the stream. If updateStartColumn is true, then the Stream will assume
      * that the values ignored are not associated with any Token, and the line numbers will be updated to skip over
      * these characters.
@@ -36,28 +42,37 @@ public:
     Stream* consume(int numChars = 1);
 
     /**
-     * Consumes the characters for as a long as the regex matches up to the limit number of characters.
+     * Consume the provided character by including it in the next Token. Does not advance the Stream.
      */
-    Stream* consumeWhile(const std::regex& matcher, int limit);
+    Stream* consume(char character);
+
+    /**
+     * Consumes the characters for as a long as the regex matches up to the limit number of characters. If eofError is
+     * provided and the end of file is detected, then an error is thrown with the given message.
+     */
+    Stream* consumeWhile(const std::regex& matcher, int limit,
+            const std::experimental::optional<const std::string>& eofError = std::experimental::nullopt);
 
     /**
      * If the current state of the Stream matches the given regex up to the limit number of characters, then the
      * callback is invoked.
      */
-    Stream* match(const std::regex& matcher, int limit, std::function<void (Stream* stream)> callback);
+    Stream* match(const std::regex& matcher, int limit, const std::function<void (Stream* stream)>& callback);
 
     /**
      * If the current state of the Stream matches the given regex up to the limit number of characters, then the
      * thenCb is invoked, otherwise the elseCb is invoked.
      */
-    Stream* match(const std::regex& matcher, int limit, std::function<void (Stream* stream)> thenCb,
-        std::function<void (Stream* stream)> elseCb);
+    Stream* match(const std::regex& matcher, int limit, const std::function<void (Stream* stream)>& thenCb,
+        const std::function<void (Stream* stream)>& elseCb);
 
     /**
      * As long as the current state of the stream matches the given regex up to the limit number of characters, then
-     * the callback is invoked.
+     * the callback is invoked. If an eofError is provided, and the repeat finds that the end of the file is reached,
+     * then it will throw an error with that message.
      */
-    Stream* repeat(const std::regex& matcher, int limit, std::function<void (Stream*)> callback);
+    Stream* repeat(const std::regex& matcher, int limit, const std::function<void (Stream*)>& callback,
+            const std::experimental::optional<const std::string>& eofError = std::experimental::nullopt);
 
     /**
      * Saves the current state of the buffer and will return a Token as provided by the producer of this state when

@@ -66,6 +66,15 @@ TEST(AST, IntegerTypePrints) {
     ASSERT_EQ("int", ss.str());
 }
 
+TEST(AST, StringTypePrints) {
+    const auto string = AST::StringType();
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    string.print(ss);
+    ASSERT_EQ("string", ss.str());
+}
+
 TEST(AST, FunctionPrototypePrints) {
     const auto integer = std::make_shared<const AST::IntegerType>(AST::IntegerType());
     const auto params = std::vector<std::shared_ptr<const AST::Type>>({ integer, integer });
@@ -153,6 +162,16 @@ TEST(AST, IntegerLiteralPrints) {
     llvm::raw_string_ostream ss(str);
     literal.print(ss);
     ASSERT_EQ("1234", ss.str());
+}
+
+TEST(AST, StringLiteralPrints) {
+    std::shared_ptr<const Token> token = TokenBuilder("abc123").setStringLiteral(true).build();
+    const auto literal = AST::StringLiteral(token);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    literal.print(ss);
+    ASSERT_EQ("\"abc123\"", ss.str());
 }
 
 TEST(AST, FunctionCallPrints) {

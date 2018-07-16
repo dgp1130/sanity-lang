@@ -2,22 +2,26 @@
 #include <memory>
 #include "stream.h"
 #include "../utils/queue_utils.h"
+#include "../models/exceptions.h"
 
 typedef ::testing::Test TestFixture;
 
+typedef Exceptions::SyntaxException SyntaxException;
+
 class StreamTestFixture : public TestFixture {
 protected:
-    Stream* stream;
+    std::unique_ptr<Stream> stream;
 
     void SetUp() override {
         std::queue<char> q = QueueUtils::queueify("abc123");
-        stream = new Stream(q);
-    }
-
-    void TearDown() override {
-        delete stream;
+        stream = std::make_unique<Stream>(Stream(q));
     }
 };
+
+TEST_F(StreamTestFixture, FrontReturnsFirstCharacter) {
+    const char c = this->stream->front();
+    ASSERT_EQ('a', c);
+}
 
 TEST_F(StreamTestFixture, IgnoresCharacters) {
     this->stream->ignore(3)->returnToken();
@@ -33,11 +37,31 @@ TEST_F(StreamTestFixture, ConsumesCharacters) {
     ASSERT_EQ("abc", token->source);
 }
 
+TEST_F(StreamTestFixture, ConsumesTheGivenCharacterWithoutAdvancing) {
+    this->stream->consume('z')->returnToken();
+    std::shared_ptr<const Token> token = this->stream->extractResult();
+
+    ASSERT_EQ("z", token->source);
+    ASSERT_EQ('a', stream->front());
+}
+
 TEST_F(StreamTestFixture, ConsumesWhileCharacterMatchRegex) {
     this->stream->consumeWhile(std::regex("^[a-z]"), 1)->returnToken();
     std::shared_ptr<const Token> token = this->stream->extractResult();
 
     ASSERT_EQ("abc", token->source);
+}
+
+TEST_F(StreamTestFixture, ConsumeWhileDoesNotThrowExceptionOnEofWhenCalledWithoutMessage) {
+    this->stream->consumeWhile(std::regex("^."), 1)->returnToken();
+    std::shared_ptr<const Token> token = this->stream->extractResult();
+
+    ASSERT_EQ("abc123", token->source);
+}
+
+TEST_F(StreamTestFixture, ConsumeWhileThrowsExceptionOnEofWhenCalledWithMessage) {
+    ASSERT_THROW(this->stream->consumeWhile(std::regex("^."), 1, std::string("Unexpected EOF."))->returnToken(),
+            SyntaxException);
 }
 
 TEST_F(StreamTestFixture, MatchInvokesThenCallbackForMatchingRegex) {
@@ -89,6 +113,18 @@ TEST_F(StreamTestFixture, RepeatDoesNotInvokeCallbackIfNoMatch) {
     });
 
     SUCCEED();
+}
+
+TEST_F(StreamTestFixture, RepeatDoesNotThrowExceptionOnEofWhenCalledWithoutMessage) {
+    ASSERT_NO_THROW(this->stream->repeat(std::regex("^."), 1, [](Stream* stream) {
+       stream->ignore();
+    }));
+}
+
+TEST_F(StreamTestFixture, RepeatThrowsExceptionOnEofWhenCalledWithMessage) {
+    ASSERT_THROW(this->stream->repeat(std::regex("^."), 1, [](Stream* stream) {
+        stream->ignore();
+    }, std::string("Unexpected EOF")), SyntaxException);
 }
 
 TEST_F(StreamTestFixture, CallsAfterReturnTokenAreIgnoredUntilNextRun) {
