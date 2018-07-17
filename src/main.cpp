@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
 
     // Generate the LLVM IR.
     try {
-        Generator().generate(*file);
+        Generator::gen(*file);
     } catch (const TypeException& ex) {
         std::cerr << "TypeException: " << ex.what() << std::endl;
         return 1;

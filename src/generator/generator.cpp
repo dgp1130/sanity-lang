@@ -24,6 +24,10 @@ typedef Exceptions::UndeclaredException UndeclaredException;
 const int CHAR_BIT_SIZE = 32; // putchar() uses int32 rather than int8.
 const int INTEGER_BIT_SIZE = 32;
 
+llvm::Function* Generator::gen(const AST::File& file) {
+    return Generator().generate(file);
+}
+
 llvm::Value* Generator::generate(const AST::AddOpExpression& addition) {
     llvm::Value* left = addition.leftExpr->generate(*this);
     llvm::Value* right = addition.rightExpr->generate(*this);

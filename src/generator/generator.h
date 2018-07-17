@@ -15,7 +15,12 @@
  * Visitor class for the AST models which generates LLVM IR objects based on the abstract syntax tree.
  */
 class Generator {
+protected:
+    Generator() = default;
+
 public:
+    static llvm::Function* gen(const AST::File& file);
+
     llvm::Value* generate(const AST::AddOpExpression& addition);
     llvm::Value* generate(const AST::SubOpExpression& subtraction);
     llvm::Value* generate(const AST::MulOpExpression& multiplication);
