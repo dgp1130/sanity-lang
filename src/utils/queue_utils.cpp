@@ -14,11 +14,11 @@ std::queue<char> QueueUtils::queueify(const std::string& str) {
     return q;
 }
 
-std::queue<std::shared_ptr<const Token>> QueueUtils::queueify(std::shared_ptr<const Token> tokens[], int length) {
+std::queue<std::shared_ptr<const Token>> QueueUtils::queueify(const std::vector<std::shared_ptr<const Token>>& tokens) {
     std::queue<std::shared_ptr<const Token>> q;
 
-    for (int i = 0; i < length; ++i) {
-        q.push(tokens[i]);
+    for (const auto& token : tokens) {
+        q.push(token);
     }
 
     return q;

@@ -12,8 +12,8 @@
 typedef Exceptions::ParseException ParseException;
 
 TEST(Parser, ParsesEmptyFile) {
-    std::shared_ptr<const Token> tokens[] = {};
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 0 /* length */);
+    const std::vector<std::shared_ptr<const Token>> tokens = {};
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     std::shared_ptr<const AST::File> file = Parser::parse(input);
 
@@ -21,7 +21,7 @@ TEST(Parser, ParsesEmptyFile) {
 }
 
 TEST(Parser, ParsesExtern) {
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("extern").build(),
         TokenBuilder("test").build(),
         TokenBuilder(":").build(),
@@ -34,7 +34,7 @@ TEST(Parser, ParsesExtern) {
         TokenBuilder("int").build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 11 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     std::shared_ptr<const AST::File> file = Parser::parse(input);
 
@@ -46,7 +46,7 @@ TEST(Parser, ParsesExtern) {
 
 TEST(Parser, ParsesIntegerType) {
     // Currently, the int type can only be used in an extern which must be a function.
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("extern").build(),
         TokenBuilder("test").build(),
         TokenBuilder(":").build(),
@@ -56,7 +56,7 @@ TEST(Parser, ParsesIntegerType) {
         TokenBuilder("int").build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 8 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     std::shared_ptr<const AST::File> file = Parser::parse(input);
 
@@ -68,7 +68,7 @@ TEST(Parser, ParsesIntegerType) {
 
 TEST(Parser, ParsesStringType) {
     // Currently, the string type can only be used in an extern which must be a function.
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("extern").build(),
         TokenBuilder("test").build(),
         TokenBuilder(":").build(),
@@ -78,7 +78,7 @@ TEST(Parser, ParsesStringType) {
         TokenBuilder("string").build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 8 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     std::shared_ptr<const AST::File> file = Parser::parse(input);
 
@@ -89,31 +89,31 @@ TEST(Parser, ParsesStringType) {
 }
 
 TEST(Parser, ThrowsParseExceptionOnExternsUnexpectedEOF) {
-    std::shared_ptr<const Token> tokens[] = {
-            TokenBuilder("extern").build(),
-            TokenBuilder("test").build(),
-            TokenBuilder(":").build(),
+    const std::vector<std::shared_ptr<const Token>> tokens = {
+        TokenBuilder("extern").build(),
+        TokenBuilder("test").build(),
+        TokenBuilder(":").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 3 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     ASSERT_THROW(Parser::parse(input), ParseException);
 }
 
 TEST(Parser, ThrowsParseExceptionOnExternsStatementWithNoType) {
-    std::shared_ptr<const Token> tokens[] = {
-            TokenBuilder("extern").build(),
-            TokenBuilder("test").build(),
-            TokenBuilder(":").build(),
-            TokenBuilder("blarg").build(),
-            TokenBuilder(";").build(),
+    const std::vector<std::shared_ptr<const Token>> tokens = {
+        TokenBuilder("extern").build(),
+        TokenBuilder("test").build(),
+        TokenBuilder(":").build(),
+        TokenBuilder("blarg").build(),
+        TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 5 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     ASSERT_THROW(Parser::parse(input), ParseException);
 }
 
 TEST(Parser, ParsesAdditionOperationLeftToRight) {
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("1").setIntegerLiteral(true).build(),
         TokenBuilder("+").build(),
         TokenBuilder("2").setIntegerLiteral(true).build(),
@@ -121,7 +121,7 @@ TEST(Parser, ParsesAdditionOperationLeftToRight) {
         TokenBuilder("3").setIntegerLiteral(true).build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 6 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     std::shared_ptr<const AST::File> file = Parser::parse(input);
 
@@ -132,7 +132,7 @@ TEST(Parser, ParsesAdditionOperationLeftToRight) {
 }
 
 TEST(Parser, ParsesSubtractionOperationLeftToRight) {
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("3").setIntegerLiteral(true).build(),
         TokenBuilder("-").build(),
         TokenBuilder("2").setIntegerLiteral(true).build(),
@@ -140,7 +140,7 @@ TEST(Parser, ParsesSubtractionOperationLeftToRight) {
         TokenBuilder("1").setIntegerLiteral(true).build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 6 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     std::shared_ptr<const AST::File> file = Parser::parse(input);
 
@@ -151,7 +151,7 @@ TEST(Parser, ParsesSubtractionOperationLeftToRight) {
 }
 
 TEST(Parser, ParsesMultiplicationOperationLeftToRight) {
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("1").setIntegerLiteral(true).build(),
         TokenBuilder("*").build(),
         TokenBuilder("2").setIntegerLiteral(true).build(),
@@ -159,7 +159,7 @@ TEST(Parser, ParsesMultiplicationOperationLeftToRight) {
         TokenBuilder("3").setIntegerLiteral(true).build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 6 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     std::shared_ptr<const AST::File> file = Parser::parse(input);
 
@@ -170,7 +170,7 @@ TEST(Parser, ParsesMultiplicationOperationLeftToRight) {
 }
 
 TEST(Parser, ParsesDivisionOperationLeftToRight) {
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("3").setIntegerLiteral(true).build(),
         TokenBuilder("/").build(),
         TokenBuilder("2").setIntegerLiteral(true).build(),
@@ -178,7 +178,7 @@ TEST(Parser, ParsesDivisionOperationLeftToRight) {
         TokenBuilder("1").setIntegerLiteral(true).build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 6 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     std::shared_ptr<const AST::File> file = Parser::parse(input);
 
@@ -189,7 +189,7 @@ TEST(Parser, ParsesDivisionOperationLeftToRight) {
 }
 
 TEST(Parser, RespectsOrderOfOperations) {
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("1").setIntegerLiteral(true).build(),
         TokenBuilder("+").build(),
         TokenBuilder("2").setIntegerLiteral(true).build(),
@@ -205,7 +205,7 @@ TEST(Parser, RespectsOrderOfOperations) {
         TokenBuilder(")").build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 14 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     std::shared_ptr<const AST::File> file = Parser::parse(input);
 
@@ -216,7 +216,7 @@ TEST(Parser, RespectsOrderOfOperations) {
 }
 
 TEST(Parser, ParsesSingleFunctionCall) {
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("test").build(),
         TokenBuilder("(").build(),
         TokenBuilder("a").setCharLiteral(true).build(),
@@ -225,7 +225,7 @@ TEST(Parser, ParsesSingleFunctionCall) {
         TokenBuilder(")").build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 7 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     std::shared_ptr<const AST::File> file = Parser::parse(input);
 
@@ -236,13 +236,13 @@ TEST(Parser, ParsesSingleFunctionCall) {
 }
 
 TEST(Parser, ParsesFunctionCallWithEmptyArguments) {
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("test").build(),
         TokenBuilder("(").build(),
         TokenBuilder(")").build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 4 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     std::shared_ptr<const AST::File> file = Parser::parse(input);
 
@@ -253,11 +253,11 @@ TEST(Parser, ParsesFunctionCallWithEmptyArguments) {
 }
 
 TEST(Parser, ParsesSingleCharLiteralStatement) {
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("a").setCharLiteral(true).build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 2 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     std::shared_ptr<const AST::File> file = Parser::parse(input);
 
@@ -268,11 +268,11 @@ TEST(Parser, ParsesSingleCharLiteralStatement) {
 }
 
 TEST(Parser, ParsesSingleIntegerLiteralStatement) {
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("1234").setIntegerLiteral(true).build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 2 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     std::shared_ptr<const AST::File> file = Parser::parse(input);
 
@@ -283,11 +283,11 @@ TEST(Parser, ParsesSingleIntegerLiteralStatement) {
 }
 
 TEST(Parser, ParsesSingleStringLiteralStatement) {
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("abc123").setStringLiteral(true).build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 2 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     std::shared_ptr<const AST::File> file = Parser::parse(input);
 
@@ -298,7 +298,7 @@ TEST(Parser, ParsesSingleStringLiteralStatement) {
 }
 
 TEST(Parser, ParsesMultipleStatements) {
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("test1").build(),
         TokenBuilder("(").build(),
         TokenBuilder("a").setCharLiteral(true).build(),
@@ -308,7 +308,7 @@ TEST(Parser, ParsesMultipleStatements) {
         TokenBuilder("b").setCharLiteral(true).build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 7 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     std::shared_ptr<const AST::File> file = Parser::parse(input);
 
@@ -319,67 +319,67 @@ TEST(Parser, ParsesMultipleStatements) {
 }
 
 TEST(Parser, ThrowsParseExceptionOnFunctionCallMissingName) {
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("(").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 1 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     ASSERT_THROW(Parser::parse(input), ParseException);
 }
 
 TEST(Parser, ThrowsParseExceptionOnFunctionCallMissingOpenParen) {
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("test").build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 2 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     ASSERT_THROW(Parser::parse(input), ParseException);
 }
 
 TEST(Parser, ThrowsParseExceptionOnFunctionCallMissingCloseParen) {
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("test").build(),
         TokenBuilder("(").build(),
         TokenBuilder("a").setCharLiteral(true).build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 4 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     ASSERT_THROW(Parser::parse(input), ParseException);
 }
 
 TEST(Parser, ThrowsParseExceptionOnStatementMissingSemicolon) {
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("test").build(),
         TokenBuilder("(").build(),
         TokenBuilder("a").setCharLiteral(true).build(),
         TokenBuilder(")").build(),
         TokenBuilder("foo").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 5 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     ASSERT_THROW(Parser::parse(input), ParseException);
 }
 
 TEST(Parser, ThrowsParseExceptionOnUnexpectedEOF) {
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("test").build(),
         TokenBuilder("(").build(),
         // EOF
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 2 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     ASSERT_THROW(Parser::parse(input), ParseException);
 }
 
 TEST(Parser, ThrowsParseExceptionOnUnmatchedParen) {
-    std::shared_ptr<const Token> tokens[] = {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
         TokenBuilder("(").build(),
         TokenBuilder("1").setIntegerLiteral(true).build(),
         TokenBuilder(";").build(),
     };
-    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens, 3 /* length */);
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
     ASSERT_THROW(Parser::parse(input), ParseException);
 }
