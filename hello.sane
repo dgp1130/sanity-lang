@@ -1,3 +1,10 @@
+extern printf: (string, int) -> int;
 extern puts: (string) -> int;
 
-puts("Hello World!");
+extern stringify: (int) -> string;
+
+printf("Hello World!\n", 0);
+printf("1 + 2 = %d\n", 1 + 2);
+
+printf("2 * 3 = ", 0);
+puts(stringify(2 * 3));

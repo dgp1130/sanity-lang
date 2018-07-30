@@ -60,22 +60,17 @@ example, it can be run with:
 $ build/bin/Sanity --input hello.sane
 ```
 
-Currently, running Sanity simply outputs the LLVM IR which can execute it. The easiest way to run this is to put it into
-the LLVM interpreter.
+Currently, running Sanity directly simply outputs the LLVM IR which can execute it. To actually run this code, it needs
+to be compiled with its dependencies, currently just the stdlib it uses. This can be quite complex to do manually, so
+there is a [run.sh](../run.sh) script to do this for you. Simply execute:
 
 ```bash
-$ cmake --build . --target Sanity && build/bin/Sanity --input hello.sane | lli
+$ ./run.sh hello.sane
 ```
 
-It is also possible to run Sanity by putting its output into the LLVM compiler to convert it to assembly for the dev
-architecture. This can then use `g++` to compile it into a binary and then execute it.
-
-```bash
-$ cmake --build . --target Sanity && build/bin/Sanity --input hello.sane | llc | g++ -x assembler - -o build/bin/hello && build/bin/hello
-```
-
-This should use `ld` to link rather than mixing toolchains with `g++`, but I was having issues with that whereas `g++`
-was not. This should be good enough for now.
+Any program or logic which cannot currently be expressed in Sanity, can be written in a C file under `stdlib/`. That
+will be linked to the Sanity program and can be accessed through an extern. This is a useful escape hatch when trying to
+create functionality which is not yet entirely supported by Sanity.
 
 ## Test Sanity
 
