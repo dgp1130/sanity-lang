@@ -94,6 +94,11 @@ For end-to-end test, Sanity uses PyTest. Install it with `pip install -U pytest`
 $ pytest .
 ```
 
+Note that Sanity and its standard library must both be built before the end-to-end tests can be run. The Intellij run
+configuration builds the Sanity compiler automatically, however the standard library is not. If it is changed, make sure
+to recompile it manually (`gcc -c src/stdlib/<file>.c -o build/bin/stdlib/<file>.o`) or run `./run` which will compile
+these automatically in its process.
+
 ## IDE
 
 Currently the only editor that has been used to develop Sanity is CLion (Intellij), so that's the only one with
