@@ -80,12 +80,18 @@ Tests can be built using the following CMake command.
 $ cmake --build . --target SanityTest
 ```
 
-Sanity uses [GoogleTest](https://github.com/google/googletest) as its test framework. CMake will automatically download
-the GoogleTest dependency from source and build as part of the repo. This should happen automatically without requiring
-any special set up. Tests can run with:
+Sanity uses [GoogleTest](https://github.com/google/googletest) as its unit test framework. CMake will automatically
+download the GoogleTest dependency from source and build as part of the repo. This should happen automatically without
+requiring any special set up. Tests can be run with:
 
 ```bash
 $ build/bin/SanityTest
+```
+
+For end-to-end test, Sanity uses PyTest. Install it with `pip install -U pytest` and then run it with:
+
+```bash
+$ pytest .
 ```
 
 ## IDE

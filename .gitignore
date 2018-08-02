@@ -70,3 +70,6 @@ build/
 
 # I don't use Code::Blocks, so I don't know why this is built in the first place, and I can't move it either.
 Sanity.cbp
+
+# pytest
+.pytest_cache

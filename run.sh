@@ -3,7 +3,7 @@
 BIN_DIR="build/bin"
 COMPILER="${BIN_DIR}/Sanity"
 PROG_OBJECT_FILE="${BIN_DIR}/prog.o"
-STDLIB_OBJECT_FILE="${BIN_DIR}/stdlib.o"
+STDLIB_BUILD_DIR="${BIN_DIR}/stdlib"
 PROG="${BIN_DIR}/prog"
 
 # Verify inputs.
@@ -21,10 +21,14 @@ cmake --build . --target Sanity
 "${COMPILER}" --input "${INPUT_FILE}" | llc | gcc -x assembler - -c -o "${PROG_OBJECT_FILE}"
 
 # Compile the standard library for Sanity.
-gcc -Wall -c src/stdlib/*.c -o "${STDLIB_OBJECT_FILE}"
+mkdir -p "${STDLIB_BUILD_DIR}"
+for SOURCE_FILE in src/stdlib/*.c; do
+    OBJ_FILE=$(echo "${SOURCE_FILE}" | sed "s,.*/,,g" | sed "s/\.c$/.o/g")
+    gcc -Wall -c "${SOURCE_FILE}" -o "${STDLIB_BUILD_DIR}/${OBJ_FILE}"
+done
 
 # Link the Sanity object code against the standard library.
-gcc -o "${PROG}" "${PROG_OBJECT_FILE}" "${STDLIB_OBJECT_FILE}"
+gcc -o "${PROG}" "${PROG_OBJECT_FILE}" "${STDLIB_BUILD_DIR}"/*
 
 # Run the final result.
 "${PROG}"
