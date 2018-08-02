@@ -40,6 +40,7 @@ putchar('o');
     assert stdout == "Hello"
     assert stderr == ""
 
+
 def test_echo():
     status, stdout, stderr = run_test_case("""
 extern printf: (string) -> int;
