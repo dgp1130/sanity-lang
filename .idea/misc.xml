@@ -3,11 +3,14 @@
   <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$" />
   <component name="CidrRootsConfiguration">
     <sourceRoots>
-      <file path="$PROJECT_DIR$/e2e_tests" />
       <file path="$PROJECT_DIR$/src" />
     </sourceRoots>
     <excludeRoots>
-      <file path="$PROJECT_DIR$/build" />
+      <file path="$PROJECT_DIR$/bazel-Sanity" />
+      <file path="$PROJECT_DIR$/bazel-bin" />
+      <file path="$PROJECT_DIR$/bazel-genfiles" />
+      <file path="$PROJECT_DIR$/bazel-out" />
+      <file path="$PROJECT_DIR$/bazel-testlogs" />
     </excludeRoots>
   </component>
   <component name="JavaScriptSettings">

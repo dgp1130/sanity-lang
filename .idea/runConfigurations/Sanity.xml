@@ -1,5 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Sanity" type="CMakeRunConfiguration" factoryName="Application" singleton="true" PROGRAM_PARAMS="--input hello.sane" WORKING_DIR="file://$PROJECT_DIR$" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Sanity" TARGET_NAME="Sanity" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="Sanity" RUN_TARGET_NAME="Sanity">
-    <method />
-  </configuration>
-</component>
