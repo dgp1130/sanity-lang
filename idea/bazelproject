@@ -1,0 +1,16 @@
+directories:
+  # Add all directories to view.
+  .
+
+targets:
+  # Add all targets to view.
+  //...:all
+
+test_sources:
+  # End to end tests will be here, no way to mark single-file unit tests which I'm aware of.
+  tests/
+
+import_run_configurations:
+  # Run Configurations for hello.sane and all tests.
+  idea/Hello.xml
+  idea/Tests.xml
