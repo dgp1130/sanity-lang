@@ -98,7 +98,7 @@ llvm::FunctionType* AST::FunctionPrototype::generate(IGenerator& generator) cons
 void AST::FunctionPrototype::print(llvm::raw_ostream& stream) const {
     stream << "(";
     if (!this->parameters.empty()) this->parameters[0]->print(stream);
-    for (int i = 1; i < this->parameters.size(); ++i) {
+    for (unsigned int i = 1; i < this->parameters.size(); ++i) {
         stream << ", ";
         this->parameters[i]->print(stream);
     }
@@ -191,7 +191,7 @@ llvm::Value* AST::FunctionCall::generate(IGenerator& generator) const {
 void AST::FunctionCall::print(llvm::raw_ostream& stream) const {
     stream << this->callee << "(";
     if (!this->arguments.empty()) this->arguments[0]->print(stream);
-    for (int i = 1; i < this->arguments.size(); ++i) {
+    for (unsigned int i = 1; i < this->arguments.size(); ++i) {
         stream << ", ";
         this->arguments[i]->print(stream);
     }

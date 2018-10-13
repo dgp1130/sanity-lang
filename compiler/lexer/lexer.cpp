@@ -19,8 +19,10 @@ char escapeCharacter(const char controlChar, const Stream* stream) {
         case '\'': return '\'';
         case '\"': return '\"';
         case '\\': return '\\';
-        default: stream->throwException("Unexpected escape character: \\" + controlChar);
+        default: stream->throwException("Unexpected escape character: \\" + std::string(1, controlChar));
     }
+
+    throw AssertionException("Unreachable statement");
 }
 
 std::queue<std::shared_ptr<const Token>> Lexer::tokenize(std::queue<char>& chars) {
