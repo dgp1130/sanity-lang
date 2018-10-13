@@ -1,0 +1,7 @@
+extern putchar: (int) -> int;
+
+putchar('H');
+putchar('e');
+putchar('l');
+putchar('l');
+putchar('o');

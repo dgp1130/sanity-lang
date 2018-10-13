@@ -1,0 +1,5 @@
+extern printf: (string) -> int;
+extern stringify: (int) -> string;
+extern readInt: () -> int;
+
+printf(stringify(readInt() + readInt()));

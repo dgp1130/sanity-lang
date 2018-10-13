@@ -1,4 +1,4 @@
-package(default_visibility = ["//:__pkg__"])
+package(default_visibility = ["//visibility:public"])
 
 cc_binary(
     name = "compiler",

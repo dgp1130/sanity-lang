@@ -1,0 +1,3 @@
+extern puts: (string) -> int;
+
+puts("Hello World!");

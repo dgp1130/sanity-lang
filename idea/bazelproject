@@ -7,7 +7,7 @@ targets:
   //...:all
 
 test_sources:
-  # End to end tests will be here, no way to mark single-file unit tests which I'm aware of.
+  # End to end tests are here, no way to mark single-file unit tests which I'm aware of.
   tests/
 
 import_run_configurations:
