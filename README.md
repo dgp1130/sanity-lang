@@ -555,6 +555,118 @@ algebraic types with all possible outcomes. This is a better system for these co
 throwing exceptions should only be used for extreme instances where returning exceptions up the call stack
 is impractical.
 
+### Pattern Matching
+
+Most functional languages support pattern matching, looking something like the following (example is Haskell):
+
+```haskell
+factorial :: (Integral a) => a -> a
+factorial 0 = 1
+factorial n = n * factorial (n - 1)
+```
+
+This is a very powerful tool which has one critical limitation, patterns can only be constants or bindings
+to variable names. For more complex pattern matching, Haskell uses guards (example shamelessly stolen from
+http://learnyouahaskell.com/syntax-in-functions):
+
+```haskell
+bmiTell :: (RealFloat a) => a -> String
+bmiTell bmi
+    | bmi <= 18.5 = "You're underweight, you emo, you!"
+    | bmi <= 25.0 = "You're supposedly normal. Pffft, I bet you're ugly!"
+    | bmi <= 30.0 = "You're fat! Lose some weight, fatty!"
+    | otherwise   = "You're a whale, congratulations!"
+```
+
+This is really a hack around pattern matching, because it isn't quite as flexible as it need to be to support many use
+cases. Sanity will also have pattern matching, but utilize it slightly differently. The parameters given won't just be
+constants, they will be functions. Consider the following Haskell-like example:
+
+```haskell
+bmiTell :: (RealFloat a) => a -> String
+bmiTell (<=18.5) = "You're underweight, you emo, you!"
+bmiTell (<=25.0) = "You're supposedly normal. Pffft, I bet you're ugly!"
+bmiTell (<=30.0) = "You're fat! Lose some weight, fatty!"
+bmiTell _ = "You're a whale, congratulations!"
+```
+
+Recall that functional languages like Haskell strictly follow the lambda calculus concept that all functions accept
+exactly one parameter and return exactly one result. This means that a function which accepts two parameters, is
+actually a function that accepts one parameter and returns a function which accepts the second parameter. While
+conceptually a multi-parameter function, it is really a curry of many single-parameter functions. This can be hard to
+see in Haskell because it does this automatically, but clearer to explain in something like JavaScript:
+
+```javascript
+const traditionalAdd = (a, b) => a + b;
+traditionalAdd(1, 2); // 3
+const curriedAdd = (a) => (b) => a + b;
+curriedAdd(1)(2); // 3
+```
+
+The curried format has many benefits, one of which is that functions can be partially applied:
+
+```javascript
+const curriedAdd = (a) => (b) => a + b;
+const addOne = curriedAdd(1);
+addOne(2); // 3
+addOne(3); // 4
+addOne(4); // 5
+```
+
+Binary operators like `+` are considered functions of two parameters, and can also be partially applied. The result is a
+function which accepts a single parameter to complete the operation (switching back to Haskell).
+
+```haskell
+addOne = (+) 1 -- Partially apply one to the + operator
+addOne 2 -- 3
+addOne 3 -- 4
+addOne 4 -- 5
+```
+
+Sanity will utilize this in a pattern match by the treating the provided pattern as a function which accepts the value
+to match and returns whether or not it matched as a boolean.
+
+```haskell
+relatesToFive (<5) = "The value is less than 5."
+relatesToFive (>5) = "The value is greater than 5."
+relatesToFive _ = "The value is equal to 5."
+```
+
+This can be used to compute arbitrarily complex logic in the pattern match. Consider the infix operator `fand`, a custom
+functional implementation of the `&&` operator, which accepts two functions and invokes each of them with the same value
+and performs a boolean AND on the result.
+
+```haskell
+fand :: (Integral a) => (a -> Bool) -> (a -> Bool) -> Bool
+fand a b n = a(n) && b(n)
+
+fnot :: (Integral a) => (a -> Bool) -> Bool
+fnot a n = not a(n)
+
+isOdd :: Integral -> Integral
+isOdd n => n % 2 == 1
+
+relatesToZeroAndFive (>0 `fand` <5 `fand` isOdd) = "The value is between 0 and 5 and is odd."
+relatesToZeroAndFive (>0 `fand` <5 `fand` fnot isOdd) = "The value is between 0 and 5 and is even."
+relatesToZeroAndFive (<=0) = "The value is less than or equal to 0."
+relatesToZeroAndFive (>=5) = "The value is greater than or equal to 5."
+```
+
+This removes the need for a separate guard syntax, because the pattern matching itself is just as powerful. There are
+still a couple open questions. For example it is often necessary to bind to the real value even with these complex
+matches, maybe that could look something like:
+
+```haskell
+relatesToZeroAndFive value <- (>0 `fand` <5) = "The value " ++ show value ++ " is between 0 and 5."
+```
+
+The compiler is also a little dumber for providing more flexible pattern matching. It can no longer guarantee that all
+possibilities are handled. This could lead to additional errors and missed edge cases. Of course, with guards the same
+thing is possible, even in Haskell. Haskell's syntax somewhat discourages use of pattern matching in this way while
+Sanity would embrace it. Like all the other ideas here, I'm not entirely convinced it's a good one, but the point of
+Sanity is to try these kinds of things and find out. The exact syntax Sanity would use to accomplish this is still up in
+the air.
+
 ### Context
 
 ### Compile-Time Execution
