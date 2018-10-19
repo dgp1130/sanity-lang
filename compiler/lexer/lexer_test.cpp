@@ -240,3 +240,38 @@ TEST(Lexer, TokenizingInvalidStringLiteralThrowsException) {
     std::queue<char> qBackslash = QueueUtils::queueify("\"\\\"");
     ASSERT_THROW(Lexer::tokenize(qBackslash), SyntaxException);
 }
+
+TEST(Lexer, DoesNotTokenizeSingleLineComments) {
+    std::queue<char> q = QueueUtils::queueify("foo // bar\nbaz");
+    std::queue<std::shared_ptr<const Token>> tokens = Lexer::tokenize(q);
+
+    ASSERT_EQ(2, tokens.size());
+
+    const auto foo = tokens.front();
+    tokens.pop();
+    ASSERT_EQ("foo", foo->source);
+
+    const auto baz = tokens.front();
+    tokens.pop();
+    ASSERT_EQ("baz", baz->source);
+}
+
+TEST(Lexer, DoesNotTokenizeBlockComments) {
+    std::queue<char> q = QueueUtils::queueify("foo /* bar */ baz");
+    std::queue<std::shared_ptr<const Token>> tokens = Lexer::tokenize(q);
+
+    ASSERT_EQ(2, tokens.size());
+
+    const auto foo = tokens.front();
+    tokens.pop();
+    ASSERT_EQ("foo", foo->source);
+
+    const auto baz = tokens.front();
+    tokens.pop();
+    ASSERT_EQ("baz", baz->source);
+}
+
+TEST(Lexer, TokenizingUnendingBlockCommentThrowsException) {
+    std::queue<char> q = QueueUtils::queueify("foo /* bar baz");
+    ASSERT_THROW(Lexer::tokenize(q), SyntaxException);
+}

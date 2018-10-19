@@ -13,6 +13,7 @@ test_sources:
 import_run_configurations:
   # Run Configurations for hello.sane and all tests.
   idea/Hello.xml
+  idea/Debug_Hello.xml
   idea/Tests.xml
 
 build_flags:

@@ -30,6 +30,60 @@ TEST_F(StreamTestFixture, IgnoresCharacters) {
     ASSERT_EQ("", token.value()->source);
 }
 
+TEST_F(StreamTestFixture, IgnoresWhileCharacterMatchesRegex) {
+    this->stream->ignoreWhile(std::regex("^[a-z]"), 1)->returnToken();
+    std::experimental::optional<std::shared_ptr<const Token>> token = this->stream->extractResult();
+
+    ASSERT_EQ('1', stream->front());
+}
+
+TEST_F(StreamTestFixture, IgnoreWhileStopsOnNonMatchingRegex) {
+    this->stream->ignoreWhile(std::regex("^[0-9]"), 1)->returnToken();
+    this->stream->extractResult();
+
+    ASSERT_EQ('a', stream->front());
+}
+
+TEST_F(StreamTestFixture, IgnoreWhileDoesNotThrowExceptionOnEofWhenCalledWithoutMessage) {
+    ASSERT_NO_THROW(this->stream->ignoreWhile(std::regex("^."), 1)->returnToken());
+}
+
+TEST_F(StreamTestFixture, IgnoreWhileThrowsExceptionOnEofWhenCalledWithMessage) {
+    ASSERT_THROW(this->stream->ignoreWhile(
+        std::regex("^."),
+        1,
+        true /* updateStartColumn */,
+        std::string("Unexpected EOF.")
+    )->returnToken(), SyntaxException);
+}
+
+TEST_F(StreamTestFixture, IgnoresUntilCharacterMatchesRegex) {
+    this->stream->ignoreUntil(std::regex("^[0-9]"), 1)->returnToken();
+    this->stream->extractResult();
+
+    ASSERT_EQ('1', stream->front());
+}
+
+TEST_F(StreamTestFixture, IgnoreUntilStopsOnMatchingRegex) {
+    this->stream->ignoreUntil(std::regex("^[a-z]"), 1)->returnToken();
+    this->stream->extractResult();
+
+    ASSERT_EQ('a', stream->front());
+}
+
+TEST_F(StreamTestFixture, IgnoreUntilDoesNotThrowExceptionOnEofWhenCalledWithoutMessage) {
+    ASSERT_NO_THROW(this->stream->ignoreUntil(std::regex("^z"), 1)->returnToken());
+}
+
+TEST_F(StreamTestFixture, IgnoreUntilThrowsExceptionOnEofWhenCalledWithMessage) {
+    ASSERT_THROW(this->stream->ignoreUntil(
+        std::regex("^z"),
+        1,
+        true /* updateStartColumn */,
+        std::string("Unexpected EOF.")
+    )->returnToken(), SyntaxException);
+}
+
 TEST_F(StreamTestFixture, ConsumesCharacters) {
     this->stream->consume(3)->returnToken();
     std::experimental::optional<std::shared_ptr<const Token>> token = this->stream->extractResult();
@@ -45,18 +99,22 @@ TEST_F(StreamTestFixture, ConsumesTheGivenCharacterWithoutAdvancing) {
     ASSERT_EQ('a', stream->front());
 }
 
-TEST_F(StreamTestFixture, ConsumesWhileCharacterMatchRegex) {
+TEST_F(StreamTestFixture, ConsumesWhileCharacterMatchesRegex) {
     this->stream->consumeWhile(std::regex("^[a-z]"), 1)->returnToken();
     std::experimental::optional<std::shared_ptr<const Token>> token = this->stream->extractResult();
 
     ASSERT_EQ("abc", token.value()->source);
 }
 
-TEST_F(StreamTestFixture, ConsumeWhileDoesNotThrowExceptionOnEofWhenCalledWithoutMessage) {
-    this->stream->consumeWhile(std::regex("^."), 1)->returnToken();
-    std::experimental::optional<std::shared_ptr<const Token>> token = this->stream->extractResult();
+TEST_F(StreamTestFixture, ConsumeWhileStopsOnNonMatchingRegex) {
+    this->stream->consumeWhile(std::regex("^[0-9]"), 1)->returnToken();
+    this->stream->extractResult();
 
-    ASSERT_EQ("abc123", token.value()->source);
+    ASSERT_EQ('a', stream->front());
+}
+
+TEST_F(StreamTestFixture, ConsumeWhileDoesNotThrowExceptionOnEofWhenCalledWithoutMessage) {
+    ASSERT_NO_THROW(this->stream->consumeWhile(std::regex("^."), 1)->returnToken());
 }
 
 TEST_F(StreamTestFixture, ConsumeWhileThrowsExceptionOnEofWhenCalledWithMessage) {
@@ -98,8 +156,8 @@ TEST_F(StreamTestFixture, MatchDoesNotInvokeCallbackForNonMatchingRegex) {
     SUCCEED();
 }
 
-TEST_F(StreamTestFixture, RepeatInvokesCallbackWhileRegexMatches) {
-    this->stream->repeat(std::regex("^[a-z]"), 1, [](Stream* stream) {
+TEST_F(StreamTestFixture, RepeatWhileInvokesCallbackWhileRegexMatches) {
+    this->stream->repeatWhile(std::regex("^[a-z]"), 1, [](Stream* stream) {
         stream->consume();
     })->returnToken();
     std::experimental::optional<std::shared_ptr<const Token>> token = this->stream->extractResult();
@@ -107,22 +165,51 @@ TEST_F(StreamTestFixture, RepeatInvokesCallbackWhileRegexMatches) {
     ASSERT_EQ("abc", token.value()->source);
 }
 
-TEST_F(StreamTestFixture, RepeatDoesNotInvokeCallbackIfNoMatch) {
-    this->stream->repeat(std::regex("^[0-9]"), 1, [](Stream* stream) {
+TEST_F(StreamTestFixture, RepeatWhileDoesNotInvokeCallbackIfNoMatch) {
+    this->stream->repeatWhile(std::regex("^[0-9]"), 1, [](Stream* stream) {
         FAIL();
     });
 
     SUCCEED();
 }
 
-TEST_F(StreamTestFixture, RepeatDoesNotThrowExceptionOnEofWhenCalledWithoutMessage) {
-    ASSERT_NO_THROW(this->stream->repeat(std::regex("^."), 1, [](Stream* stream) {
+TEST_F(StreamTestFixture, RepeatWhileDoesNotThrowExceptionOnEofWhenStreamContinues) {
+    ASSERT_NO_THROW(this->stream->repeatWhile(std::regex("^."), 1, [](Stream* stream) {
        stream->ignore();
     }));
 }
 
-TEST_F(StreamTestFixture, RepeatThrowsExceptionOnEofWhenCalledWithMessage) {
-    ASSERT_THROW(this->stream->repeat(std::regex("^."), 1, [](Stream* stream) {
+TEST_F(StreamTestFixture, RepeatWhileThrowsExceptionOnEofWhenStreamEnds) {
+    ASSERT_THROW(this->stream->repeatWhile(std::regex("^."), 1, [](Stream* stream) {
+        stream->ignore();
+    }, std::string("Unexpected EOF")), SyntaxException);
+}
+
+TEST_F(StreamTestFixture, RepeatUntilInvokesCallbackUntilRegexMatches) {
+    this->stream->repeatUntil(std::regex("^[0-9]"), 1, [](Stream* stream) {
+        stream->consume();
+    })->returnToken();
+    std::experimental::optional<std::shared_ptr<const Token>> token = this->stream->extractResult();
+
+    ASSERT_EQ("abc", token.value()->source);
+}
+
+TEST_F(StreamTestFixture, RepeatUntilDoesNotInvokeCallbackIfMatch) {
+    this->stream->repeatUntil(std::regex("^[a-z]"), 1, [](Stream* stream) {
+        FAIL();
+    });
+
+    SUCCEED();
+}
+
+TEST_F(StreamTestFixture, RepeatUntilDoesNotThrowExceptionOnEofWhenStreamContinues) {
+    ASSERT_NO_THROW(this->stream->repeatUntil(std::regex("^z"), 1, [](Stream* stream) {
+        stream->ignore();
+    }));
+}
+
+TEST_F(StreamTestFixture, RepeatUntilThrowsExceptionOnEofWhenStreamEnds) {
+    ASSERT_THROW(this->stream->repeatUntil(std::regex("^z"), 1, [](Stream* stream) {
         stream->ignore();
     }, std::string("Unexpected EOF")), SyntaxException);
 }

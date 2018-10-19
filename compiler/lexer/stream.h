@@ -37,6 +37,24 @@ public:
     Stream* ignore(int numChars = 1, bool updateStartColumn = false);
 
     /**
+     * Ignores the characters for as long as the regex matches up to the limit number of characters. If
+     * updateStartColumn is true, then the Stream will assume that the values are ignored and not associated with any
+     * Token, and the line numbers will be updated to skip over these characters. If an eofError is provided, and the
+     * repeat finds that the end of the file is reached, then it will throw an error with that message.
+     */
+    Stream* ignoreWhile(const std::regex& matcher, int limit, bool updateStartColumn = false,
+            const std::experimental::optional<const std::string>& eofError = std::experimental::nullopt);
+
+    /**
+     * Ignores the characters until the regex matches up to the limit number of characters. If updateStartColumn is
+     * true, then the Stream will assume that the values are ignored and not associated with any Token, and the line
+     * numbers will be updated to skip over these characters. If an eofError is provided, and the repeat finds that the
+     * end of the file is reached, then it will throw an error with that message.
+     */
+    Stream* ignoreUntil(const std::regex& matcher, int limit, bool updateStartColumn = false,
+            const std::experimental::optional<const std::string>& eofError = std::experimental::nullopt);
+
+    /**
      * Consumes the next amount of characters by including them in the next Token.
      */
     Stream* consume(int numChars = 1);
@@ -71,7 +89,15 @@ public:
      * the callback is invoked. If an eofError is provided, and the repeat finds that the end of the file is reached,
      * then it will throw an error with that message.
      */
-    Stream* repeat(const std::regex& matcher, int limit, const std::function<void (Stream*)>& callback,
+    Stream* repeatWhile(const std::regex& matcher, int limit, const std::function<void (Stream*)>& callback,
+            const std::experimental::optional<const std::string>& eofError = std::experimental::nullopt);
+
+    /**
+     * Until the current state of the stream matches the given regex up to the limit number of characters, then the
+     * callback is invoked. If an eofError is provided, and the repeat finds that the end of the file is reached, then
+     * it will throw an error with that message.
+     */
+    Stream* repeatUntil(const std::regex& matcher, int limit, const std::function<void (Stream*)>& callback,
             const std::experimental::optional<const std::string>& eofError = std::experimental::nullopt);
 
     /**
@@ -108,6 +134,10 @@ private:
      * not active if all input characters have been read and processed.
      */
     bool active();
+
+    Stream* repeat(const std::function<bool (const std::string&)>& condition, int limit,
+            const std::function<void (Stream* stream)>& callback,
+            const std::experimental::optional<const std::string>& eofError = std::experimental::nullopt);
 };
 
 #endif //SANITY_STREAM_H

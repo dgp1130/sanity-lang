@@ -83,6 +83,28 @@ Stream* Stream::ignore(const int numChars, const bool updateStartColumn) {
     return this;
 }
 
+Stream* Stream::ignoreWhile(const std::regex& matcher, const int limit, const bool updateStartColumn,
+        const std::experimental::optional<const std::string>& eofError) {
+    if (!this->active()) return this;
+
+    this->repeatWhile(matcher, limit, [&updateStartColumn](Stream* stream) {
+        stream->ignore(1, updateStartColumn);
+    }, eofError);
+
+    return this;
+}
+
+Stream* Stream::ignoreUntil(const std::regex& matcher, const int limit, const bool updateStartColumn,
+        const std::experimental::optional<const std::string>& eofError) {
+    if (!this->active()) return this;
+
+    this->repeatUntil(matcher, limit, [&updateStartColumn](Stream* stream) {
+       stream->ignore(1, updateStartColumn);
+    }, eofError);
+
+    return this;
+}
+
 Stream* Stream::consume(const int numChars) {
     if (!this->active()) return this;
 
@@ -104,7 +126,7 @@ Stream* Stream::consumeWhile(const std::regex& matcher, const int limit,
         const std::experimental::optional<const std::string>& eofError) {
     if (!this->active()) return this;
 
-    this->repeat(matcher, limit, [](Stream* stream) {
+    this->repeatWhile(matcher, limit, [](Stream* stream) {
         stream->consume();
     }, eofError);
 
@@ -133,22 +155,18 @@ Stream* Stream::match(const std::regex& matcher, const int limit, const std::fun
     return this;
 }
 
-Stream* Stream::repeat(const std::regex& matcher, const int limit, const std::function<void (Stream*)>& callback,
+Stream* Stream::repeatWhile(const std::regex& matcher, const int limit, const std::function<void (Stream*)>& callback,
         const std::experimental::optional<const std::string>& eofError) {
-    if (!this->active()) return this;
+    return this->repeat([&matcher](const std::string& str) {
+       return std::regex_search(str, matcher);
+    }, limit, callback, eofError);
+}
 
-    bool matched;
-    do {
-        const std::string str = dequeToString(this->chars, (unsigned long) limit);
-        matched = std::regex_search(str, matcher);
-        if (matched) callback(this);
-    } while (matched && this->active());
-
-    if (this->chars.empty() && eofError) {
-        this->throwException(eofError.value());
-    }
-
-    return this;
+Stream* Stream::repeatUntil(const std::regex& matcher, const int limit, const std::function<void (Stream*)>& callback,
+        const std::experimental::optional<const std::string>& eofError) {
+    return this->repeat([&matcher](const std::string& str) {
+        return !std::regex_search(str, matcher);
+    }, limit, callback, eofError);
 }
 
 void Stream::returnToken(const std::function<TokenBuilder (const std::string& source)>& tokenProducer) {
@@ -188,4 +206,23 @@ std::experimental::optional<std::shared_ptr<const Token>> Stream::extractResult(
 bool Stream::active() {
     // Skip processing if we already have a result, or if there are no characters left to analyze.
     return !this->result && !this->chars.empty();
+}
+
+Stream* Stream::repeat(const std::function<bool (const std::string&)>& condition, const int limit,
+        const std::function<void (Stream* stream)>& callback,
+        const std::experimental::optional<const std::string>& eofError) {
+    if (!this->active()) return this;
+
+    bool matched;
+    do {
+        const std::string str = dequeToString(this->chars, (unsigned long) limit);
+        matched = condition(str);
+        if (matched) callback(this);
+    } while (matched && this->active());
+
+    if (this->chars.empty() && eofError) {
+        this->throwException(eofError.value());
+    }
+
+    return this;
 }

@@ -31,8 +31,19 @@ std::queue<std::shared_ptr<const Token>> Lexer::tokenize(std::queue<char>& chars
     auto stream = std::make_unique<Stream>(Stream(chars));
     std::experimental::optional<std::shared_ptr<const Token>> token;
     do {
-        token = stream->repeat(std::regex("^[ \t\n\r]"), 1, [](Stream* stream) {
-            stream->ignore(1 /* space */, true /* updateStartLineNumbers */);
+        token = stream->repeatWhile(std::regex("^([ \t\n\r]|//|/\\*)"), 2, [](Stream* stream) {
+            stream->repeatWhile(std::regex("^[ \t\n\r]"), 1, [](Stream* stream) {
+                stream->ignore(1 /* whitespace */, true /* updateStartColumn */);
+            })->match(std::regex("^//"), 2, [](Stream* stream) {
+                stream->ignore(2 /* slashes */, true /* updateStartColumn */);
+                stream->ignoreUntil(std::regex("^\\n"), 1, true /* updateStartColumn */);
+                stream->ignore(1 /* newline */, true /* updateStartColumn */);
+            })->match(std::regex("^/\\*"), 2, [](Stream* stream) {
+                stream->ignore(2 /* open comment */, true /* updateStartColumn */);
+                stream->ignoreUntil(std::regex("^\\*/"), 2, true /* updateStartColumn */,
+                        std::string("Unexpected EOF in block comment."));
+                stream->ignore(2 /* close comment */, true /* updateStartColumn */);
+            });
         })->match(std::regex("^[a-zA-Z_]"), 1, [](Stream* stream) {
             stream->consumeWhile(std::regex("^[a-zA-Z0-9_]"), 1)->returnToken();
         })->match(std::regex("^[0-9]"), 1, [](Stream* stream) {
@@ -40,7 +51,7 @@ std::queue<std::shared_ptr<const Token>> Lexer::tokenize(std::queue<char>& chars
                 return TokenBuilder(source).setIntegerLiteral(true);
             });
         })->match(std::regex("^\""), 1, [](Stream* stream) { // Then
-            stream->ignore(/* open double quote */)->repeat(std::regex("^[^\"\n\t\r]"), 1, [](Stream* stream) {
+            stream->ignore(/* open double quote */)->repeatUntil(std::regex("^[\"\n\t\r]"), 1, [](Stream* stream) {
                 stream->match(std::regex("^\\\\"), 1, [](Stream* stream) { // Then, escaped char
                     // Ignore in a separate statement so it occurs before the stream->front() call.
                     stream->ignore(/* backslash */);
