@@ -4,12 +4,14 @@ load("//tests:tester.bzl", "test_sanity_prog")
 sanity_binary(
     name = "cat",
     src = "cat.sane",
+    deps = ["//stdlib:input"],
 )
 
 test_sanity_prog(
     name = "cat_test",
     binary = ":cat",
     expected_stdout = "Hello World!",
+    provided_stdin = "Hello World!",
 )
 
 sanity_binary(
