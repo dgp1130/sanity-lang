@@ -71,7 +71,7 @@ std::queue<std::shared_ptr<const Token>> Lexer::tokenize(std::queue<char>& chars
                     stream->consume(/* char */);
                 }
             })->match(std::regex("^\'"), 1, [](Stream* stream) { // Then
-                stream->ignore(/* close quote */)->returnToken([&stream](const std::string& source) {
+                stream->ignore(/* close quote */)->returnToken([](const std::string& source) {
                     return TokenBuilder(source).setCharLiteral(true);
                 });
             }, [](Stream* stream) { // Else
