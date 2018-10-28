@@ -13,3 +13,14 @@ cc_library(
         "//compiler/models:token",
     ],
 )
+
+cc_test(
+    name = "parser_test",
+    srcs = ["parser_test.cpp"],
+    deps = [
+        ":parser",
+        "//compiler/models:token_builder",
+        "//compiler/utils:queue",
+        "@gtest//:gtest_main",
+    ],
+)
