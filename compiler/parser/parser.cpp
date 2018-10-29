@@ -72,11 +72,23 @@ std::shared_ptr<const AST::Function> Parser::externDecl() {
     return std::make_shared<const AST::Function>(AST::Function(name->source, type));
 }
 
-// <statement> ::= <expression> ;
+// <statement> ::= let <name> : <type> = <expression> ;
+//               | <expression> ;
 std::shared_ptr<const AST::Statement> Parser::statement() {
-    std::shared_ptr<const AST::Expression> expr = this->expression();
-    this->match(";");
-    return std::make_shared<const AST::Statement>(AST::Statement(expr));
+    if (this->tokens.front()->source == "let") {
+        this->match("let");
+        std::shared_ptr<const Token> name = this->match(/* name */);
+        this->match(":");
+        std::shared_ptr<const AST::Type> type = this->type();
+        this->match("=");
+        std::shared_ptr<const AST::Expression> expr = this->expression();
+        this->match(";");
+        return std::make_shared<const AST::StatementLet>(AST::StatementLet(name, type, expr));
+    } else {
+        std::shared_ptr<const AST::Expression> expr = this->expression();
+        this->match(";");
+        return std::make_shared<const AST::StatementExpression>(AST::StatementExpression(expr));
+    }
 }
 
 // <type> ::= int
@@ -185,9 +197,10 @@ std::shared_ptr<const AST::Expression> Parser::exprParen() {
     }
 }
 
-// <expr-leaf> ::= <function-call>
-//               | <char-literal>
+// <expr-leaf> ::= <char-literal>
 //               | <integer-literal>
+//               | <identifier>
+//               | <function-call>
 std::shared_ptr<const AST::Expression> Parser::exprLeaf() {
     if (this->tokens.empty()) throw ParseException("Expected an expression, but got EOF.");
 
@@ -198,7 +211,15 @@ std::shared_ptr<const AST::Expression> Parser::exprLeaf() {
     } else if (this->tokens.front()->isStringLiteral) {
         return this->stringLiteral();
     } else {
-        return this->functionCall();
+        const std::shared_ptr<const Token> identifier = this->match([](std::shared_ptr<const Token> token) {
+            return !token->isCharLiteral;
+        }, "identifier");
+
+        if (this->tokens.front()->source == "(") {
+            return this->functionCall(identifier);
+        } else {
+            return this->identifierExpr(identifier);
+        }
     }
 }
 
@@ -207,10 +228,7 @@ std::shared_ptr<const AST::Expression> Parser::exprLeaf() {
 //               | ø
 // <arguments'> ::= , <argument>
 //                | ø
-std::shared_ptr<const AST::FunctionCall> Parser::functionCall() {
-    std::shared_ptr<const Token> callee = this->match([](std::shared_ptr<const Token> token) {
-        return !token->isCharLiteral;
-    }, "function name");;
+std::shared_ptr<const AST::FunctionCall> Parser::functionCall(const std::shared_ptr<const Token> callee) {
     this->match("(");
 
     // Parse arguments
@@ -250,6 +268,10 @@ std::shared_ptr<const AST::StringLiteral> Parser::stringLiteral() {
     }, "string literal");
 
     return std::make_shared<const AST::StringLiteral>(AST::StringLiteral(literal));
+}
+
+std::shared_ptr<const AST::IdentifierExpr> Parser::identifierExpr(const std::shared_ptr<const Token> name) {
+    return std::make_shared<const AST::IdentifierExpr>(AST::IdentifierExpr(name));
 }
 
 std::shared_ptr<const AST::File> Parser::parse(std::queue<std::shared_ptr<const Token>>& tokens) {

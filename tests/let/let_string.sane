@@ -1,0 +1,5 @@
+extern printf: (string, int) -> int;
+
+let foo: string = "Hello";
+
+printf(foo, 0);

@@ -6,6 +6,7 @@ typedef Exceptions::AssertionException AssertionException;
 typedef Exceptions::FileNotFoundException FileNotFoundException;
 typedef Exceptions::IllegalStateException IllegalStateException;
 typedef Exceptions::ParseException ParseException;
+typedef Exceptions::RedeclaredException RedeclaredException;
 typedef Exceptions::SyntaxException SyntaxException;
 typedef Exceptions::TypeException TypeException;
 typedef Exceptions::UndeclaredException UndeclaredException;
@@ -32,6 +33,12 @@ const char* IllegalStateException::what() const noexcept {
 ParseException::ParseException(const std::string& message): message(message) { }
 
 const char* ParseException::what() const noexcept {
+    return this->message.c_str();
+}
+
+RedeclaredException::RedeclaredException(const std::string& message): message(message) { }
+
+const char* RedeclaredException::what() const noexcept {
     return this->message.c_str();
 }
 

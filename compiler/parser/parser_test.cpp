@@ -318,19 +318,46 @@ TEST(Parser, ParsesMultipleStatements) {
     ASSERT_EQ("test1(\'a\');\n\'b\';\n", ss.str());
 }
 
-TEST(Parser, ThrowsParseExceptionOnFunctionCallMissingName) {
+TEST(Parser, ParsesStatementLet) {
     const std::vector<std::shared_ptr<const Token>> tokens = {
-        TokenBuilder("(").build(),
+        TokenBuilder("let").build(),
+        TokenBuilder("foo").build(),
+        TokenBuilder(":").build(),
+        TokenBuilder("int").build(),
+        TokenBuilder("=").build(),
+        TokenBuilder("1").setIntegerLiteral(true).build(),
+        TokenBuilder(";").build(),
     };
     std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 
-    ASSERT_THROW(Parser::parse(input), ParseException);
+    std::shared_ptr<const AST::File> file = Parser::parse(input);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    file->print(ss);
+    ASSERT_EQ("let foo: int = 1;\n", ss.str());
 }
 
-TEST(Parser, ThrowsParseExceptionOnFunctionCallMissingOpenParen) {
+TEST(Parser, ParsesIdentifierUsageInExpression) {
     const std::vector<std::shared_ptr<const Token>> tokens = {
-        TokenBuilder("test").build(),
+        TokenBuilder("foo").build(),
+        TokenBuilder("+").build(),
+        TokenBuilder("bar").build(),
         TokenBuilder(";").build(),
+    };
+    std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
+
+    std::shared_ptr<const AST::File> file = Parser::parse(input);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    file->print(ss);
+    ASSERT_EQ("(foo) + (bar);\n", ss.str());
+}
+
+TEST(Parser, ThrowsParseExceptionOnFunctionCallMissingName) {
+    const std::vector<std::shared_ptr<const Token>> tokens = {
+        TokenBuilder("(").build(),
     };
     std::queue<std::shared_ptr<const Token>> input = QueueUtils::queueify(tokens);
 

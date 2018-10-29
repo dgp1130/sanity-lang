@@ -21,12 +21,14 @@ namespace AST {
     class StringType;
     class FunctionPrototype;
     class Function;
-    class Statement;
+    class StatementExpression;
+    class StatementLet;
     class File;
     class CharLiteral;
     class IntegerLiteral;
     class StringLiteral;
     class FunctionCall;
+    class IdentifierExpr;
 
     // Declare a visitor interface.
     class IGenerator {
@@ -39,12 +41,14 @@ namespace AST {
         virtual llvm::PointerType* generate(const AST::StringType& string) = 0;
         virtual llvm::FunctionType* generate(const AST::FunctionPrototype& prototype) = 0;
         virtual llvm::Function* generate(const AST::Function& func) = 0;
-        virtual llvm::Value* generate(const AST::Statement& stmt) = 0;
+        virtual void generate(const AST::StatementExpression& stmt) = 0;
+        virtual void generate(const AST::StatementLet& stmt) = 0;
         virtual llvm::Function* generate(const AST::File& file) = 0;
         virtual llvm::Value* generate(const AST::CharLiteral& literal) = 0;
         virtual llvm::Value* generate(const AST::IntegerLiteral& literal) = 0;
         virtual llvm::Value* generate(const AST::StringLiteral& literal) = 0;
         virtual llvm::Value* generate(const AST::FunctionCall& call) = 0;
+        virtual llvm::Value* generate(const AST::IdentifierExpr& identifier) = 0;
     };
 
     class Element {
@@ -155,11 +159,30 @@ namespace AST {
 
     class Statement : public Element {
     public:
+        virtual void generate(IGenerator& generator) const = 0;
+    };
+
+    class StatementExpression : public Statement {
+    public:
         std::shared_ptr<const Expression> expr;
 
-        explicit Statement(std::shared_ptr<const Expression> expr);
+        explicit StatementExpression(std::shared_ptr<const Expression> expr);
 
-        llvm::Value* generate(IGenerator& generator) const;
+        void generate(IGenerator& generator) const override;
+
+        void print(llvm::raw_ostream& stream) const override;
+    };
+
+    class StatementLet : public Statement {
+    public:
+        const std::string name;
+        std::shared_ptr<const Type> type;
+        std::shared_ptr<const Expression> expr;
+
+        StatementLet(std::shared_ptr<const Token> name, std::shared_ptr<const Type> type,
+                std::shared_ptr<const Expression> expr);
+
+        void generate(IGenerator& generator) const override;
 
         void print(llvm::raw_ostream& stream) const override;
     };
@@ -217,6 +240,17 @@ namespace AST {
 
         FunctionCall(std::shared_ptr<const Token> callee,
             std::vector<std::shared_ptr<const Expression>> arguments);
+
+        llvm::Value* generate(IGenerator& generator) const override;
+
+        void print(llvm::raw_ostream& stream) const override;
+    };
+
+    class IdentifierExpr : public Expression {
+    public:
+        const std::string name;
+
+        explicit IdentifierExpr(std::shared_ptr<const Token> name);
 
         llvm::Value* generate(IGenerator& generator) const override;
 

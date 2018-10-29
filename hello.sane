@@ -9,3 +9,14 @@ printf("1 + 2 = %d\n", 1 + 2);
 
 printf("2 * 3 = ", 0);
 puts(stringify(2 * 3));
+
+let foo: int = 1;
+printf("foo = %d\n", foo);
+
+let bar: int = foo + 2;
+printf("bar = %d\n", bar);
+
+let baz: string = "hello";
+printf("baz = \"", 0);
+printf(baz, 0);
+puts("\"");

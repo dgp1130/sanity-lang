@@ -24,6 +24,7 @@ std::map<std::string, llvm::Value*> namedValues;
 
 typedef Exceptions::FileNotFoundException FileNotFoundException;
 typedef Exceptions::ParseException ParseException;
+typedef Exceptions::RedeclaredException RedeclaredException;
 typedef Exceptions::SyntaxException SyntaxException;
 typedef Exceptions::TypeException TypeException;
 typedef Exceptions::UndeclaredException UndeclaredException;
@@ -67,6 +68,9 @@ int main(int argc, char* argv[]) {
     // Generate the LLVM IR.
     try {
         Generator::gen(*file);
+    } catch (const RedeclaredException& ex) {
+        std::cerr << "RedeclaredException: " << ex.what() << std::endl;
+        return 1;
     } catch (const TypeException& ex) {
         std::cerr << "TypeException: " << ex.what() << std::endl;
         return 1;

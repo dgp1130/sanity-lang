@@ -1,0 +1,11 @@
+extern printf: (string, int) -> int;
+
+let foo: int = 1;
+let bar: int = foo + 2;
+let baz: int = foo + bar + 3;
+
+printf("\n", 0); // Leading newline so the multi-line assertion in BUILD is a little cleaner.
+
+printf("foo = %d;\n", foo);
+printf("bar = %d;\n", bar);
+printf("baz = %d;\n", baz);

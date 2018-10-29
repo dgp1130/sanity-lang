@@ -121,6 +121,18 @@ TEST(Generator, GeneratesFunction) {
     ASSERT_EQ(llvm::IntegerType::getInt32Ty(*context), func->getReturnType());
 }
 
+TEST(Generator, GeneratesStatementLet) {
+    const std::shared_ptr<const Token> nameToken = TokenBuilder("foo").build();
+    const auto type = std::make_shared<const AST::IntegerType>(AST::IntegerType());
+    const std::shared_ptr<const Token> valueToken = TokenBuilder("1").setIntegerLiteral(true).build();
+    const auto expr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(valueToken));
+    const AST::StatementLet stmt(nameToken, type, expr);
+
+    GeneratorUnderTest().generate(stmt);
+
+    ASSERT_NE(nullptr, namedValues[nameToken->source]);
+}
+
 TEST(Generator, GeneratesMainFromFile) {
     const auto integer = std::make_shared<const AST::IntegerType>(AST::IntegerType());
     const auto params = std::vector<std::shared_ptr<const AST::Type>>({ integer });
@@ -133,14 +145,14 @@ TEST(Generator, GeneratesMainFromFile) {
     const auto arg1 = std::make_shared<const AST::CharLiteral>(charToken1);
     const auto arguments1 = std::vector<std::shared_ptr<const AST::Expression>>({ arg1 });
     const auto expr1 = std::make_shared<const AST::FunctionCall>(AST::FunctionCall(nameToken1, arguments1));
-    const auto stmt1 = std::make_shared<const AST::Statement>(AST::Statement(expr1));
+    const auto stmt1 = std::make_shared<const AST::StatementExpression>(AST::StatementExpression(expr1));
 
     const std::shared_ptr<const Token> nameToken2 = TokenBuilder("test2").build();
     const std::shared_ptr<const Token> charToken2 = TokenBuilder("b").setCharLiteral(true).build();
     const auto arg2 = std::make_shared<const AST::CharLiteral>(charToken2);
     const auto arguments2 = std::vector<std::shared_ptr<const AST::Expression>>({ arg2 });
     const auto expr2 = std::make_shared<const AST::FunctionCall>(AST::FunctionCall(nameToken2, arguments2));
-    const auto stmt2 = std::make_shared<const AST::Statement>(AST::Statement(expr2));
+    const auto stmt2 = std::make_shared<const AST::StatementExpression>(AST::StatementExpression(expr2));
 
     const AST::File file(std::vector<std::shared_ptr<const AST::Function>>({ func }),
         std::vector<std::shared_ptr<const AST::Statement>>({ stmt1, stmt2 }));
@@ -199,4 +211,22 @@ TEST(Generator, GeneratesFunctionCall) {
     ASSERT_EQ(2, call->getNumArgOperands());
     ASSERT_EQ((int64_t) 'a', ((llvm::ConstantInt*) call->getArgOperand(0))->getValue().getSExtValue());
     ASSERT_EQ((int64_t) 'b', ((llvm::ConstantInt*) call->getArgOperand(1))->getValue().getSExtValue());
+}
+
+TEST(Generator, GeneratesIdentifierExpression) {
+    GeneratorUnderTest generator;
+
+    const std::shared_ptr<const Token> nameToken = TokenBuilder("bar").build();
+    const auto type = std::make_shared<const AST::IntegerType>(AST::IntegerType());
+    const std::shared_ptr<const Token> valueToken = TokenBuilder("1").setIntegerLiteral(true).build();
+    const auto expr = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(valueToken));
+    const AST::StatementLet declaration(nameToken, type, expr);
+
+    generator.generate(declaration);
+
+    const auto identifier = AST::IdentifierExpr(nameToken);
+
+    const llvm::Value* llvmValue = generator.generate(identifier);
+
+    ASSERT_EQ((int64_t) 1, ((llvm::ConstantInt*) llvmValue)->getValue().getSExtValue());
 }

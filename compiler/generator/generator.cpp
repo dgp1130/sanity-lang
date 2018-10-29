@@ -18,6 +18,7 @@
 #include "compiler/models/globals.h"
 
 typedef Exceptions::AssertionException AssertionException;
+typedef Exceptions::RedeclaredException RedeclaredException;
 typedef Exceptions::TypeException TypeException;
 typedef Exceptions::UndeclaredException UndeclaredException;
 
@@ -79,8 +80,20 @@ llvm::Function* Generator::generate(const AST::Function& func) {
     return llvm::Function::Create(type, llvm::Function::ExternalLinkage, func.name, module.get());
 }
 
-llvm::Value* Generator::generate(const AST::Statement& stmt) {
-    return stmt.expr->generate(*this);
+void Generator::generate(const AST::StatementExpression& stmt) {
+    stmt.expr->generate(*this);
+}
+
+void Generator::generate(const AST::StatementLet& stmt) {
+    if (namedValues[stmt.name]) {
+        throw RedeclaredException("Variable \"" + stmt.name + "\" already declared in this scope.");
+    }
+
+    llvm::Value* value = stmt.expr->generate(*this);
+    llvm::Type* type = stmt.type->generate(*this);
+    if (value->getType() != type) throw TypeException("Type mismatch");
+
+    namedValues[stmt.name] = value;
 }
 
 llvm::Function* Generator::generate(const AST::File& file) {
@@ -98,10 +111,6 @@ llvm::Function* Generator::generate(const AST::File& file) {
     // Create a new basic block to start insertion into.
     llvm::BasicBlock* bb = llvm::BasicBlock::Create(*context, "entry", main);
     builder.SetInsertPoint(bb);
-
-    // Record the function arguments in the NamedValues map.
-    namedValues.clear();
-    for (auto& Arg : main->args()) namedValues[Arg.getName()] = &Arg;
 
     // Generate the body of the main function.
     for (const auto& stmt : file.statements) {
@@ -143,4 +152,11 @@ llvm::CallInst* Generator::generate(const AST::FunctionCall& call) {
     }
 
     return builder.CreateCall(func, arguments);
+}
+
+llvm::Value* Generator::generate(const AST::IdentifierExpr& identifier) {
+    llvm::Value* value = namedValues[identifier.name];
+    if (!value) throw UndeclaredException("Variable \"" + identifier.name + "\" not declared in this scope.");
+
+    return value;
 }

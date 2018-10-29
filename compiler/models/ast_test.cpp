@@ -99,15 +99,28 @@ TEST(AST, FunctionPrints) {
     ASSERT_EQ("extern test: (int, int) -> int;", ss.str());
 }
 
-TEST(AST, StatementPrints) {
+TEST(AST, StatementExpressionPrints) {
     std::shared_ptr<const Token> token = TokenBuilder("a").setCharLiteral(true).build();
-    const auto identifier = std::make_shared<const AST::CharLiteral>(AST::CharLiteral(token));
-    auto stmt = AST::Statement(identifier);
+    const auto character = std::make_shared<const AST::CharLiteral>(AST::CharLiteral(token));
+    const auto stmt = AST::StatementExpression(character);
 
     std::string str;
     llvm::raw_string_ostream ss(str);
     stmt.print(ss);
     ASSERT_EQ("\'a\';", ss.str());
+}
+
+TEST(AST, StatementLetPrints) {
+    std::shared_ptr<const Token> name = TokenBuilder("foo").build();
+    std::shared_ptr<const Token> valueToken = TokenBuilder("1").build();
+    const auto type = std::make_shared<const AST::IntegerType>(AST::IntegerType());
+    const auto value = std::make_shared<const AST::IntegerLiteral>(AST::IntegerLiteral(valueToken));
+    const auto stmt = AST::StatementLet(name, type, value);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    stmt.print(ss);
+    ASSERT_EQ("let foo: int = 1;", ss.str());
 }
 
 TEST(AST, FilePrints) {
@@ -118,11 +131,11 @@ TEST(AST, FilePrints) {
 
     std::shared_ptr<const Token> char1Token = TokenBuilder("a").setCharLiteral(true).build();
     const auto char1 = std::make_shared<const AST::CharLiteral>(AST::CharLiteral(char1Token));
-    const auto firstStmt = std::make_shared<const AST::Statement>(AST::Statement(char1));
+    const auto firstStmt = std::make_shared<const AST::StatementExpression>(AST::StatementExpression(char1));
 
     std::shared_ptr<const Token> char2Token = TokenBuilder("b").setCharLiteral(true).build();
     const auto char2 = std::make_shared<const AST::CharLiteral>(AST::CharLiteral(char2Token));
-    const auto secondStmt = std::make_shared<const AST::Statement>(AST::Statement(char2));
+    const auto secondStmt = std::make_shared<const AST::StatementExpression>(AST::StatementExpression(char2));
 
     const std::vector<std::shared_ptr<const AST::Function>> externDecls = {externDecl};
     const std::vector<std::shared_ptr<const AST::Statement>> stmts = {firstStmt, secondStmt};
@@ -188,4 +201,14 @@ TEST(AST, FunctionCallPrints) {
     llvm::raw_string_ostream ss(str);
     func.print(ss);
     ASSERT_EQ("test(\'a\', \'b\')", ss.str());
+}
+
+TEST(AST, IdentifierExprPrints) {
+    const std::shared_ptr<const Token> name = TokenBuilder("test").build();
+    const auto identifier = AST::IdentifierExpr(name);
+
+    std::string str;
+    llvm::raw_string_ostream ss(str);
+    identifier.print(ss);
+    ASSERT_EQ("test", ss.str());
 }

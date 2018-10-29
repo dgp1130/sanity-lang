@@ -54,6 +54,17 @@ namespace Exceptions {
     };
 
     /**
+     * Exception to throw when redeclaring an existing symbol which cannot be redeclared.
+     */
+    struct RedeclaredException : public std::exception {
+        std::string message;
+
+        explicit RedeclaredException(const std::string& message);
+
+        const char* what() const noexcept override;
+    };
+
+    /**
      * Exception to throw on a syntax error encountered during lexical analysis.
      */
     struct SyntaxException : public std::exception {
@@ -81,7 +92,7 @@ namespace Exceptions {
     struct UndeclaredException : public std::exception {
         const std::string message;
 
-        UndeclaredException(const std::string& message);
+        explicit UndeclaredException(const std::string& message);
 
         const char* what() const noexcept override;
     };

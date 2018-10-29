@@ -29,12 +29,14 @@ public:
     llvm::PointerType* generate(const AST::StringType& string) override;
     llvm::FunctionType* generate(const AST::FunctionPrototype& prototype) override;
     llvm::Function* generate(const AST::Function& func) override;
-    llvm::Value* generate(const AST::Statement& stmt) override;
+    void generate(const AST::StatementExpression& stmt) override;
+    void generate(const AST::StatementLet& stmt) override;
     llvm::Function* generate(const AST::File& file) override;
     llvm::Value* generate(const AST::CharLiteral& literal) override;
     llvm::Value* generate(const AST::IntegerLiteral& literal) override;
     llvm::Value* generate(const AST::StringLiteral& literal) override;
     llvm::CallInst* generate(const AST::FunctionCall& call) override;
+    llvm::Value* generate(const AST::IdentifierExpr& identifier) override;
 };
 
 #endif //SANITY_SANITY_GENERATOR_H

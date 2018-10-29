@@ -2,6 +2,10 @@
 #include "compiler/models/ast.h"
 #include "compiler/models/token.h"
 #include "llvm/Support/raw_ostream.h"
+#include "compiler/models/globals.h"
+#include "compiler/models/exceptions.h"
+
+typedef Exceptions::UndeclaredException UndeclaredException;
 
 AST::BinaryOpExpression::BinaryOpExpression(std::shared_ptr<const AST::Expression> leftExpr,
         std::shared_ptr<const AST::Expression> rightExpr)
@@ -11,16 +15,16 @@ AST::AddOpExpression::AddOpExpression(std::shared_ptr<const AST::Expression> lef
         std::shared_ptr<const AST::Expression> rightExpr)
     : BinaryOpExpression(std::move(leftExpr), std::move(rightExpr)) { }
 
+llvm::Value* AST::AddOpExpression::generate(IGenerator& generator) const {
+    return generator.generate(*this);
+}
+
 void AST::AddOpExpression::print(llvm::raw_ostream& stream) const {
     stream << "(";
     this->leftExpr->print(stream);
     stream << ") + (";
     this->rightExpr->print(stream);
     stream << ")";
-}
-
-llvm::Value* AST::AddOpExpression::generate(IGenerator& generator) const {
-    return generator.generate(*this);
 }
 
 AST::SubOpExpression::SubOpExpression(std::shared_ptr<const AST::Expression> leftExpr,
@@ -119,13 +123,29 @@ void AST::Function::print(llvm::raw_ostream& stream) const {
     stream << ";";
 }
 
-AST::Statement::Statement(std::shared_ptr<const AST::Expression> expr) : expr(std::move(expr)) { }
+AST::StatementExpression::StatementExpression(std::shared_ptr<const AST::Expression> expr) : expr(std::move(expr)) { }
 
-llvm::Value* AST::Statement::generate(IGenerator& generator) const {
-    return generator.generate(*this);
+void AST::StatementExpression::generate(IGenerator& generator) const {
+    generator.generate(*this);
 }
 
-void AST::Statement::print(llvm::raw_ostream& stream) const {
+void AST::StatementExpression::print(llvm::raw_ostream& stream) const {
+    this->expr->print(stream);
+    stream << ";";
+}
+
+AST::StatementLet::StatementLet(std::shared_ptr<const Token> name, std::shared_ptr<const AST::Type> type,
+        std::shared_ptr<const AST::Expression> expr)
+    : name(name->source), type(std::move(type)), expr(std::move(expr)) { }
+
+void AST::StatementLet::generate(IGenerator& generator) const {
+    generator.generate(*this);
+}
+
+void AST::StatementLet::print(llvm::raw_ostream& stream) const {
+    stream << "let " << this->name << ": ";
+    this->type->print(stream);
+    stream << " = ";
     this->expr->print(stream);
     stream << ";";
 }
@@ -196,4 +216,14 @@ void AST::FunctionCall::print(llvm::raw_ostream& stream) const {
         this->arguments[i]->print(stream);
     }
     stream << ")";
+}
+
+AST::IdentifierExpr::IdentifierExpr(const std::shared_ptr<const Token> name) : name(name->source) { }
+
+llvm::Value* AST::IdentifierExpr::generate(AST::IGenerator& generator) const {
+    return generator.generate(*this);
+}
+
+void AST::IdentifierExpr::print(llvm::raw_ostream& stream) const {
+    stream << this->name;
 }

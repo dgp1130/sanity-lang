@@ -7,6 +7,8 @@ cc_library(
     srcs = ["ast.cpp"],
     hdrs = ["ast.h"],
     deps = [
+        ":exceptions",
+        ":globals",
         ":token",
         "@llvm",
     ],

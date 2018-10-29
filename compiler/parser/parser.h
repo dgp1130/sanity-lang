@@ -31,10 +31,11 @@ private:
     std::shared_ptr<const AST::Expression> exprMulDiv();
     std::shared_ptr<const AST::Expression> exprParen();
     std::shared_ptr<const AST::Expression> exprLeaf();
-    std::shared_ptr<const AST::FunctionCall> functionCall();
+    std::shared_ptr<const AST::FunctionCall> functionCall(std::shared_ptr<const Token> callee);
     std::shared_ptr<const AST::CharLiteral> charLiteral();
     std::shared_ptr<const AST::IntegerLiteral> integerLiteral();
     std::shared_ptr<const AST::StringLiteral> stringLiteral();
+    std::shared_ptr<const AST::IdentifierExpr> identifierExpr(std::shared_ptr<const Token> name);
 
 public:
     /**

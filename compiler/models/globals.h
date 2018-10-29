@@ -11,7 +11,7 @@
  */
 
 // These LLVM context values should really be Generator's fields', but putting them there causes errors on destruction.
-// These are initialized in main.cpp and test_runner.cpp for the two binaries.
+// These are initialized in main.cpp.
 extern std::unique_ptr<llvm::LLVMContext> context;
 extern llvm::IRBuilder<> builder;
 extern std::unique_ptr<llvm::Module> module;
