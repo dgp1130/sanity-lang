@@ -682,6 +682,45 @@ the air.
 
 ### Import/Export and Module System
 
+TODO
+
+#### Import Types
+
+NodeJS's `require(...)` syntax can be used on JSON files. It will import the file and parse it to a JavaScript object
+rather than executing any code. This feature is expanded upon in Sanity.
+
+Certain types can be specified when importing a file. The file will then be read according to that type instead of being
+compiled as Sanity code. The types would include at least:
+
+* `import myString as string = "path/to/file.ext"`: Loads the file into a single string and stores it in the output
+binary. Can be a simple way to load long user messages, configuration files, or markup.
+* `import myData as binary = "path/to/file.ext"`: Loads the file as binary data. Depending on how Sanity choosing to
+represent binary data, this could be an array of `byte` or a separate `Blob` or `File` object.
+
+More complex formats might be possible, such as:
+```
+import json = "path/to/file.ext";
+import myJson as json = "path/to/file.ext";
+```
+
+If Sanity provides an API for the `json` module to implement, then any system could be written to load data from a file
+at compile time and work with the natural import syntax. All of these would look for the file at compile time and embed
+the result directly into the compiled binary. This makes it easy to check-in configuration files or other data directly
+into source control and load it into the binary as a build step. XML, HTML, protocol buffers, configuration file
+formats, etc. could all work with this.
+
+My one concern is that this kind of import would require the library to be imported first, followed the data which
+requires the library. This could create some weird dependency problems. Another way of doing the same thing would be:
+
+```
+import json = "path/to/file.ext";
+import myJsonData as binary = "path/to/file.ext";
+
+let myJson = json.deserialize(myJsonData);
+```
+
+This would be much simpler and fairly equivalent, though the syntax does not work out so cleanly.
+
 ### Testing Support
 
 ### Properties
