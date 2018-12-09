@@ -345,6 +345,13 @@ function useResult() {
 }
 ```
 
+The one asterisk I can think of is that an anonymous object probably cannot be exactly the same as
+the equivalent Java class. This is because an anonymous type can be casted down to a more limited
+type. Casting means that there may be additional values not specified by the type. If additional
+values are present, then the object's size any layout could vary in a way that traditional class
+would not. Anonymous objects as specified here, would likely need to be implemented with some kind
+of map under-the-hood, much like a JavaScript object.
+
 Type-safe anonymous objects provide a means of elegantly creating an intermediate data format which
 is clear and obvious without any unnecessary boilerplate. It also provides a simple and easy means
 of creating named arguments to functions. Data can be easily stored and extracted from these objects
