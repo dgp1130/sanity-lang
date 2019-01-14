@@ -696,6 +696,7 @@ compiled as Sanity code. The types would include at least:
 binary. Can be a simple way to load long user messages, configuration files, or markup.
 * `import myData as binary = "path/to/file.ext"`: Loads the file as binary data. Depending on how Sanity choosing to
 represent binary data, this could be an array of `byte` or a separate `Blob` or `File` object.
+* `import myWorker as worker = "path/to/file.ext"`: Loads the file in a worker context. See [Workers](#Workers) for more details.
 
 More complex formats might be possible, such as:
 ```
@@ -720,6 +721,209 @@ let myJson = json.deserialize(myJsonData);
 ```
 
 This would be much simpler and fairly equivalent, though the syntax does not work out so cleanly.
+
+### Parallelism
+
+Modern ideas of parallelism via multi-threading are complex and hard to work with. Sanity will implement parallelism
+by using separate memory spaces to provide strong guarantees about the state of the system and reduce potential race
+conditions without sacrificing performance.
+
+#### Existing Problems
+
+Most languages support parallelism by simply having multiple threads running in the same memory space. This leads to
+many potential race conditions and adds a significant amount of complexity to software development. A statement as
+simple as `x++` is a potential race condition if it can be executed by multiple threads at once. Special constructs
+like locks and monitors are necessary to contain access to synchronized data in order to reason about it properly.
+
+This is especially tricky because _any_ variable could be used by another thread unless you take special care to
+protect it. The problem here is that most languages implement an opt-out sharing model. All data is shared, unless
+you specifically prevent it. Most data is not protected, and this can lead to many unintended side effects.
+
+Many tools and processes have been built to try and tame the complex world of multi-threading. Many classes will be
+annotated as `ThreadSafe`, basically meaning they were designed with multi-threading in mind. However, this does not
+mean they are foolproof. They are often built to support a particular API which can be misused. For example:
+
+```java
+@ThreadSafe
+public class MyThreadSafeClass {
+    private VeryBigObject mySharedData;
+    private boolean initialized;
+  
+    public void init() {
+        mySharedData = new VeryBigObject();
+        initialized = true;
+    }
+  
+    public boolean getInitialized() {
+        return initialized;
+    }
+    
+    public synchronized void doSomething() {
+        mySharedData.doSomethingThreadSafe();
+    }
+}
+```
+
+This class uses the Java `synchronized` keyword to make this class `ThreadSafe`. However, it really is not because it
+assumes that its user will only call `init()` once. That is a very easy mistake to make, particularly if it is
+initialized lazily. Consider the following snippet:
+
+```java
+public class MyThreadSafeClassUser {
+    private MyThreadSafeClass threadSafeClass = new MyThreadSafeClass();
+  
+    public void doSomething() {
+        if (!threadSafeClass.getInitialized()) {
+            threadSafeClass.init();
+        }
+        
+        threadSafeClass.doSomething();
+    }
+}
+```
+
+An argument can be made that `MyThreadSafeClass` should have assumed that the API could be misused and `synchronized`
+the `init()` method. That is true, however this shows the ineffectiveness of a `ThreadSafe` annotation. There are tools
+which require that `ThreadSafe` code only calls other `ThreadSafe` or `ThreadLocal` code, but these do not take into
+account possible API misused which is not truly `ThreadSafe`.
+
+#### Why You Don't Need Multi-Threading.
+
+Multi-threading is hard, it adds a singificant amount of complexity to any project and is a heavy maintenance burden.
+Sanity's take on this, 99% of projects __do not need multi-threading__ simply do not use it when it is not needed.
+Most applications are not performance intensive enough to require multi-threading because they are typically IO bound.
+
+IO bound work is when a function is limited by the speed of the Input/Output device it is using as opposed to CPU bound
+where the processor is the limiting factor. Reading a file is IO bound, because the disk takes a long time to find and
+read the file, while parsing the file path on the CPU is trivial by comparison. Computing Pi to a million digits is CPU
+bound because the majority of the work is done on the processor and no network requests/disk reads are required.
+
+Sanity's view is that most modern applications are IO bound. They require network requests and disk reads, while the
+underlying computation requirements are minimal. Consider a webserver, whose primary job is to serve files, connect to
+a database, or just call other services which do the real work. Frontend applications are very similar, most of their
+computing power is saved for rendering the screen, most of the hard computational work is sent to servers via network
+requests meaning they are really IO bound.
+
+Because most applications are IO bound, the main feature they need is to unblock the main thread. Frontend applications
+for example should never perform IO work on the main thread because it is slow and will introduce "jank" when the screen
+draws a little under 60 frames per second. Event systems already provide this feature without introducing the overhead
+of threads.
+
+In JavaScript, you can simply do:
+
+```javascript
+fetch("/api/user/getById?id=12345").then((res) => {
+    // Use response.
+});
+```
+
+This code will perform the network request in a non-blocking manner, allowing the main thread to continue to paint the
+UI. When done, the response is returned as callback via the `Promise` API. Modern tricks like `async/await` can be used
+to make this a little cleaner, but the important aspect is that multiple threads are not needed. Race conditions are
+incredibly limited in a language like JavaScript (excluding JavaScript workers which break this concept). A simple `x++`
+can _never_ be a race condition because of JavaScript's single-threaded nature.
+
+Of course this does not completely solve the problem of race conditions, but it limits them to callback boundaries:
+
+```javascript
+let myUser = User.fromId(12345);
+fetch(`/api/user/getById?id=${myUser.id}`).then((res) => {
+    return res.json(); // Have to process the response as json asynchronously.
+}).then((json) => {
+    // POSSIBLE RACE CONDITION: `myUser` may have changed.
+    myUser.updateFromJson(json);
+});
+```
+
+This can be a little easier to see with `async/await`:
+
+```javascript
+let myUser = User.fromId(12345);
+const res = await fetch('/api/user/getById?id=${myUser.id}');
+const json = await res.json(); // Have to process the response as json asynchronously.
+
+// POSSIBLE RACE CONDITION: `myUser` may have changed.
+myUser.updateFromJson(json);
+```
+
+Race conditions are still possible, but only when a read/write occurs around a `await` boundary. This drastically
+reduces the space of potential race conditions and makes them much easier to identify and correct. This means that
+the developer can think in a single-threaded mindset, and only needs to consider timing issues as they relate to
+long-running IO work. Features like locks and monitors are rarely needed in JavaScript because it's all
+single-threaded. This model makes things inifitely easier to reason about than traditional multi-threading concepts.
+
+__"But threads are needed to perform non-blocking IO!!!"__ NodeJS begs to differ, it provides IO functionality for
+accessing files and network requests without the need for user visible threads. Whether or not threads are actually
+used under the hood is irrelevant to the language. If they are independent and not observable to the end developer,
+then they may as well not be there. All the real work is done on the main thread, which is perfectly fine because
+these applications are IO bound.
+
+__"But applications need multithreading to run smoothly."__ The web platform has done just fine without threads in
+JavaScript.
+
+__"But my application is running too slowly!"__ Odds are you have a critical path you simply are not handling
+correctly. Double check your IO usage. Are you parallelizing your network requests / disk reads where possible? Are
+you batching your major work? Evaluate the big-O runtime of your algorithm and look for improvements. Going from
+O(n<sup>2</sup>) -> O(n) is a far bigger improvement than multi-threading will give you.
+
+__"But my application needs additional threads!"__ Statistically speaking, no it does not. Introducing threads into
+a system does not magically make it faster. Think through whether or not your use case is really CPU bound or IO
+bound. IO bound work can be served just fine in this model. Even if it is CPU bound, consider whether or not that
+task is truly computationally intensive enough to require and benefit signifcantly from multiple threads. Is it
+worth the additional maintenance costs? Is it worth the additional race conditions and bugs that you will
+inevitably run into? If you work in Java, are you just going to use `directExecutor()` everywhere? Do you even know
+any other `Executors` and when/why/how you would use them? Does anyone on your team know? Answer: No one knows,
+literally no one. Why put this maintenace burden on your project if it is not going to work well for you?
+
+__"But my use case is critically CPU bound!"__ See the previous questions.
+
+__"I swear, this project requires every bit of performance it can get."__ Are you really, really sure?
+
+__"Yes, we are already running a prototype which is running too slow!"__ Is the critical path CPU bound with no
+major potential algorithmic improvements?
+
+__"Yes, our problem is too computationally complex for one thread."__ Are you willing to accept the maintenance and
+development burden that this will cause?
+
+__"Yes, we understand what we are getting ourselves into."__
+
+OK, if you really, really, really, really, really need threads because you're building a game engine, writing
+graphics shaders, computing Pi to a bazillion digits, then Sanity provides workers.
+
+#### Workers
+
+Sanity's solution is workers. Each worker exists in its own, separate, isolated memory space with an opt-in sharing
+model. All data is thread-local (protected from other threads), unless you specifically expose it to other workers.
+
+The general API works like so:
+
+`adder.sane`:
+
+```
+let foo := "bar" + "baz"; // Invoked at `adderWorker.start();`
+
+export func add(a: int, b: int): int {
+  return a + b;
+}
+```
+
+`myProject.sane`:
+
+```
+import adderWorker as worker from "./adder.sane";
+
+let adder := await adderWorker.start();
+adder.add(1, 2); // 3
+```
+
+The `import x as worker` syntax returns a `Worker` object which simply has a `start()` method. When `start()` is
+called, it will spin up a thread and invoke the provided module at the top level. In this example, calling start
+would compute `"bar" + "baz"` and return the exported symbols as an anonymous object to the calling thread.
+
+Because of the way workers are loaded _all variables are thread-local_. This means there is no potential for race
+conditions between threads because no data is shared.
+
+TODO: Elaborate
 
 ### Testing Support
 
