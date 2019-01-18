@@ -4,7 +4,7 @@ A general purpose programming language for the purpose of evaluating some
 random ideas I had about ways to improve existing languages.
 
 Every programming language has its faults and as generations of languages progress
-they slowly improve. Throughout my work I've come across a few things I think
+they slowly improve. Throughout my work I have come across a few things I think
 could be done better. This language serves the purpose of trying out many of these
 ideas to discover their practicality and usefulness. Most are probably trash, but
 maybe one or two will prove to be an improvement on modern programming paradigms.
@@ -48,7 +48,7 @@ and modifications with minimal bugs.
 
 ## Feature List
 
-This is the list of random features I'd like to try out. Note that because the
+This is the list of random features I would like to try out. Note that because the
 language syntax and how the features work together is not completely finalized, the
 code snippets I use to solve each particular issue do not have a consistent syntax.
 Each is simply meant to illustrate a particular problem and how it can be addressed.
@@ -102,10 +102,10 @@ why existing constructor models are terrible and how they can be done better.
 
 ### Type System
 
-Sanity is a strongly-typed compiled language. It's syntax is built on declaring the name
+Sanity is a strongly-typed compiled language. Its syntax is built on declaring the name
 of a variable first, followed by the type delimited by a colon (similar to TypeScript or
-Kotlin). I think there's a name for this kind of declaration syntax, but for the life of
-me I can't remember it. This format is used not to solve any particular problem in existing
+Kotlin). I think there is a name for this kind of declaration syntax, but for the life of
+me I cannot remember it. This format is used not to solve any particular problem in existing
 programming languages, since syntax is one of the least important aspects of a language.
 Rather it is this way because of a theory I have about how humans think.
 
@@ -116,7 +116,7 @@ concept that I wanted to express, and understood it as a `counter`. I then decid
 the appropriate type for this counter was an `int`. I cannot think of any way in which my
 brain would say "I need an integer." and *then* say "Oh, and that integer should be called
 `counter`." Of course, I have no real data to back up this assertion, and other individuals
-may think differently. However, I'm willing to bet that my thought process is more likely
+may think differently. However, I am willing to bet that my thought process is more likely
 than the alternative. As a result, Sanity puts the variable name first, and its type second.
 This is intended to make writing the language more fluent because it will align with how the
 human brain expresses these concepts. If this were a language that was intended for
@@ -241,10 +241,10 @@ class Elsewhere {
 ```
 
 It is incredibly verbose and annoying to define a separate class just to hold a couple
-pieces of data. It can be difficult to name this class, because it often doesn't have a
+pieces of data. It can be difficult to name this class, because it often does not have a
 strong abstraction model which it represents. A more brief way around this is to use a
 `Pair` object, though Java does not have a standard `Pair` or `Tuple` class in its
-standard library (JavaFX doesn't count). If it did, it would look something like this:
+standard library (JavaFX does not count). If it did, it would look something like this:
 
 ```java
 class Elsewhere {
@@ -348,7 +348,7 @@ function useResult() {
 The one asterisk I can think of is that an anonymous object probably cannot be exactly the same as
 the equivalent Java class. This is because an anonymous type can be casted down to a more limited
 type. Casting means that there may be additional values not specified by the type. If additional
-values are present, then the object's size any layout could vary in a way that traditional class
+values are present, then the object's size and layout could vary in a way that traditional class
 would not. Anonymous objects as specified here, would likely need to be implemented with some kind
 of map under-the-hood, much like a JavaScript object.
 
@@ -436,7 +436,7 @@ TODO: Continue with negative types and so on...
 
 #### Null and Exceptions
 
-`null` has been called the "billion-dollar mistake", and while I don't entirely agree with that, the
+`null` has been called the "billion-dollar mistake", and while I do not entirely agree with that, the
 current concept of `null` can be drastically improved. `null` has quite a few problems in its current
 incarnation.
 
@@ -452,7 +452,7 @@ exception?
 Exceptions also have a few interesting challenges:
 
 * Checked exceptions in languages like Java allow the compiler to verify that all exceptions are
-handled. Most languages do not have this guarantee and most developers don't use checked exceptions.
+handled. Most languages do not have this guarantee and most developers do not use checked exceptions.
 This means it is hard to know what exceptions a given function call can make and whether or not you
 have handled all of them.
 * try-catch syntax is not perfect. It often covers more statements than it needs to, and if one of
@@ -525,7 +525,7 @@ be declared inline using the `type` keyword. A `type` followed by only a name is
 represents a particular outcome with no associated data. A `type` can be followed by an anonymous object
 which contains all the data for that type.
 
-Unfortunately, this won't fully enforce that all outcomes are handled at compile-time. The `result` type
+Unfortunately, this will not fully enforce that all outcomes are handled at compile-time. The `result` type
 can be hard casted to any of its subtypes, which will be a runtime error if not possible. Hopefully, such
 an action should be relatively rare and unnecessary.
 
@@ -585,9 +585,9 @@ bmiTell bmi
     | otherwise   = "You're a whale, congratulations!"
 ```
 
-This is really a hack around pattern matching, because it isn't quite as flexible as it need to be to support many use
-cases. Sanity will also have pattern matching, but utilize it slightly differently. The parameters given won't just be
-constants, they will be functions. Consider the following Haskell-like example:
+This is really a hack around pattern matching, because it is not quite as flexible as it need to be to support
+many use cases. Sanity will also have pattern matching, but utilize it slightly differently. The parameters
+given will not just be constants, they will be functions. Consider the following Haskell-like example:
 
 ```haskell
 bmiTell :: (RealFloat a) => a -> String
@@ -670,7 +670,7 @@ relatesToZeroAndFive value <- (>0 `fand` <5) = "The value " ++ show value ++ " i
 The compiler is also a little dumber for providing more flexible pattern matching. It can no longer guarantee that all
 possibilities are handled. This could lead to additional errors and missed edge cases. Of course, with guards the same
 thing is possible, even in Haskell. Haskell's syntax somewhat discourages use of pattern matching in this way while
-Sanity would embrace it. Like all the other ideas here, I'm not entirely convinced it's a good one, but the point of
+Sanity would embrace it. Like all the other ideas here, I am not entirely convinced it is a good one, but the point of
 Sanity is to try these kinds of things and find out. The exact syntax Sanity would use to accomplish this is still up in
 the air.
 
@@ -710,7 +710,7 @@ the result directly into the compiled binary. This makes it easy to check-in con
 into source control and load it into the binary as a build step. XML, HTML, protocol buffers, configuration file
 formats, etc. could all work with this.
 
-My one concern is that this kind of import would require the library to be imported first, followed the data which
+My one concern is that this kind of import would require the library to be imported first, followed by the data which
 requires the library. This could create some weird dependency problems. Another way of doing the same thing would be:
 
 ```
@@ -787,11 +787,12 @@ the `init()` method. That is true, however this shows the ineffectiveness of a `
 which require that `ThreadSafe` code only calls other `ThreadSafe` or `ThreadLocal` code, but these do not take into
 account possible API misused which is not truly `ThreadSafe`.
 
-#### Why You Don't Need Multi-Threading.
+#### Why You Do Not Need Multi-Threading.
 
 Multi-threading is hard, it adds a singificant amount of complexity to any project and is a heavy maintenance burden.
-Sanity's take on this, 99% of projects __do not need multi-threading__ simply do not use it when it is not needed.
-Most applications are not performance intensive enough to require multi-threading because they are typically IO bound.
+Sanity's take on this, 99% of projects __do not need multi-threading__. The simple answer is to not use multiple
+threads when it is not needed. Most applications are not performance intensive enough to require multi-threading
+because they are typically IO bound.
 
 IO bound work is when a function is limited by the speed of the Input/Output device it is using as opposed to CPU bound
 where the processor is the limiting factor. Reading a file is IO bound, because the disk takes a long time to find and
@@ -902,7 +903,7 @@ The general API works like so:
 ```
 let foo := "bar" + "baz"; // Invoked at `adderWorker.start();`
 
-export func add(a: int, b: int): int {
+export worker func add(let a: int, let b: int): int {
   return a + b;
 }
 ```
@@ -913,7 +914,7 @@ export func add(a: int, b: int): int {
 import adderWorker as worker from "./adder.sane";
 
 let adder := await adderWorker.start();
-adder.add(1, 2); // 3
+await adder.add(1, 2); // 3
 ```
 
 The `import x as worker` syntax returns a `Worker` object which simply has a `start()` method. When `start()` is
@@ -923,7 +924,132 @@ would compute `"bar" + "baz"` and return the exported symbols as an anonymous ob
 Because of the way workers are loaded _all variables are thread-local_. This means there is no potential for race
 conditions between threads because no data is shared.
 
-TODO: Elaborate
+The extra keyword `worker` is required on any function declarations which are exposed via a worker (`start()` only
+returns `worker` functions). Worker functions have an additional requirement that they only support inputs/outputs
+of primitive or shared types. Because workers exist in different memory spaces, arbitrary objects cannot be passed
+through. The `worker` keyword on the function performs a compile-time check to ensure that the function only
+accepts and returns primitive or shared types. A primitive such as a `string` or `int` can be copied between the
+spaces very easily. More complex objects can be serialized to a string or binary format, passed from one worker to
+another, and then deserialized. This is intended to be primary method of transferring data between workers.
+
+When called, all worker functions are `async` and require an `await`. Since the code is executed on a different
+thread, there are no timing guarantees and the function could take an arbitrarily long time to execute. This means
+that even if the worker function is synchronous, it still must be called with `await`.
+
+Hard copying memory between threads is not always practical. Large data such as long video cannot be practically
+copied between workers. In this case, shared memory can be used. Shared memory is a set of special types of
+primitives which can coexist across the memory spaces. These would include `SharedInt`, `SharedBoolean`,
+`SharedBytes`, etc. When this data is modified in one worker, it is reflected in another.
+
+`incrementor.sane`:
+
+```
+export worker func increment(let sharedData: SharedInt) {
+    sharedData.value += 1;
+}
+```
+
+`myProject.sane`:
+
+```
+import incrementWorker as worker from "./incrementor.sane";
+const incrementor = await incrementWorker.start();
+
+let mySharedData := SharedInt.create(2 /* initial value */);
+await incrementor.increment(mySharedData);
+print(mySharedData.value); // 3
+```
+
+This, of course, opens up a potential for race conditions. The data could change at any time meaning monitors, locks,
+and other synchronization techniques must be used. However, the developer is _opting-in_ to this risk rather than
+having to directly protect their data at every opportunity. Shared data is a pretty specific feature, and it should
+only be used with great caution in memory-intensive situations where you cannot afford to copy the data between
+workers.
+
+Because shared data is so specific and well-declared, tooling could be implemented to require that shared data is only
+access in thread-safe manners. For instance, it could determine that a read-write operation is possible without a lock
+between the two. This probably will not catch _every_ possible race condition, but will hopefully catch a decent number
+of them.
+
+Non-primitive shared values would not be supported because they can contain pointers to other data which was not built
+with multi-threading in mind. Instead you would pass the shared primitive value and then instantiate a wrapper object
+around it. This would enable each worker to have an encapsulating object managing the same set of shared data.
+
+`incrementor.sane`:
+
+```
+export class Incrementor {
+  private sharedData: SharedInt;
+
+  // Construct this class. See "Constructors" for why it works this way.
+  static func create(let sharedData: SharedInt): Incrementor {
+    return new Incrementor({sharedData = sharedData});
+  }
+  
+  func increment() {
+    // Lock the data so no other worker can overwrite it during the operation.
+    // I have not really thought through this API, locks may actually work very differently.
+    this.sharedData.exclusiveLock(() => {
+      this.sharedData.value += 1;
+    });
+  }
+}
+```
+
+`myWorker.sane`:
+
+```
+import Incrementor from "./incrementor.sane";
+
+export worker func init(let sharedData: SharedInt): worker () -> void {
+  let incrementor := Incrementor.create(sharedData);
+  return {
+    worker func doSomething() {
+      incrementor.increment();
+      incrementor.increment();
+    },
+  };
+}
+```
+
+`myProject.sane`:
+
+```
+import Incrementor from "./incrementor.sane";
+import myWorker as worker from "./myWorker.sane";
+
+let wkr = await myWorker.start();
+
+let sharedData := SharedInt.create(0 /* initial value */);
+let wkrModule = await wkr.init(sharedData);
+
+const workerTask := wkrModule.doSomething(); // Returns awaitable task, but do not await it yet.
+
+// Do operations on the same data, parallel to the worker.
+let incrementor := Incrementor.create(sharedData);
+incrementor.increment();
+incrementor.increment();
+
+// Wait for the worker to finish and check the result.
+await workerTask;
+print(sharedData.value); // Always 4.
+```
+
+In this example, the `Incrementor` class is respsonible for managing access to the shared data and encapsulates all
+the necessary synchronization so other modules do not need to worry about it. Then the worker and the main module
+create two different instances of `Incrementor` wrapping the same shared data. They perform multiple increment
+operations in parallel, meaning that they could happen in any order and have the potential for a race condition.
+However, since the `Incrementor` class properly locks its usage of the shared data. No matter what order they
+execute in all four `increment()` calls will be counted without risk of dropping one.
+
+Note that the worker's `init()` function actually returns an anonymous object with a `doSomething()` function. This
+illustrates the fact that functions declared `worker` can be passed across workers as parameters or return values of
+higher order functions. In this case, it forces us to initialize the `incrementor` via `init()` before we can call
+`doSomething()`. If we left `doSomething()` exported alongside `init()`, then `incrementor` would need to be declared
+in the root scope and initialized some kind of invalid value (see [Nulls and Exceptions](#Nulls-and-Exceptions)). The
+best way of avoiding this is to require `init()` to be called first by returning the other functions from it.
+
+Workers will likely also have some form of Go-like channels as another form of communication between workers.
 
 ### Testing Support
 
